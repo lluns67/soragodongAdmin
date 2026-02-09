@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html xmlns:th="thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        :root {
+    --xp-blue: #0058e3;
+    --xp-light-blue: #245edb;
+    --xp-bg: #ece9d8; /* XP 특유의 베이지색 배경 */
+    --xp-border: #003ca5;
+}
+
+body {
+    background-color: #3a6ea5; /* 배경화면 (고전적인 파란 배경) */
+    font-family: "Tahoma", sans-serif; /* XP 기본 폰트 */
+    font-size: 12px;
+}
+
+/* 윈도우 창 전체 구조 */
+.xp-window {
+    width: 800px;
+    height: 500px;
+    background-color: var(--xp-bg);
+    border: 3px solid var(--xp-blue);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+/* 제목 표시줄 */
+.title-bar {
+    background: linear-gradient(to bottom, #0058e3 0%, #245edb 10%, #0058e3 100%);
+    padding: 5px 10px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+/* 주소창 영역 */
+.address-bar-container {
+    background-color: white;
+    border-bottom: 1px solid #999;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.address-bar-container input {
+    flex-grow: 1;
+    border: 1px solid #7f9db9;
+    padding: 2px 5px;
+}
+
+/* 폴더가 표시되는 메인 영역 */
+.folder-view {
+    flex-grow: 1;
+    background-color: white;
+    margin: 2px;
+    border: 2px inset #fff;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 20px;
+    align-content: start;
+    overflow-y: auto;
+}
+
+/* 개별 점포(폴더) 아이템 */
+.folder-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    padding: 5px;
+    border: 1px solid transparent;
+}
+
+.folder-item:hover {
+    background-color: rgba(49, 106, 197, 0.1);
+    border: 1px solid #316ac5;
+}
+
+.folder-icon {
+    width: 48px;
+    height: 48px;
+    background: url('https://img.icons8.com/color/48/folder-invoices.png') no-repeat center;
+    margin-bottom: 5px;
+}
+
+/* 우클릭 메뉴 */
+.xp-context-menu {
+    position: absolute;
+    background: white;
+    border: 1px solid #aca899;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
+    padding: 2px;
+    z-index: 1000;
+}
+
+.xp-context-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.xp-context-menu li {
+    padding: 5px 20px;
+    cursor: default;
+}
+
+.xp-context-menu li:hover {
+    background-color: #316ac5;
+    color: white;
+}
+        /* 메뉴바 스타일 */
+.menu-bar {
+    background-color: var(--xp-bg);
+    padding: 2px 10px;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    gap: 15px;
+}
+
+/* 도구 모음 스타일 */
+.toolbar {
+    background-color: var(--xp-bg);
+    padding: 3px 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px solid #999;
+}
+
+.nav-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    padding: 3px 6px;
+    cursor: pointer;
+}
+
+.nav-btn:hover:not(.disabled) {
+    border: 1px solid #316ac5;
+    background-color: rgba(49, 106, 197, 0.1);
+}
+
+.nav-btn.disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.separator {
+    width: 1px;
+    height: 25px;
+    background-color: #999;
+    margin: 0 5px;
+}
+
+/* 주소창 내부 아이콘 배치 */
+.address-input-wrapper {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    border: 1px solid #7f9db9;
+    background: white;
+    padding: 1px 4px;
+}
+
+.address-input-wrapper input {
+    border: none;
+    width: 100%;
+    outline: none;
+}
+
+.go-btn {
+    border: 1px solid #7f9db9;
+    background: var(--xp-bg);
+    cursor: pointer;
+}
+/* 컨텍스트 메뉴 상세 스타일 */
+.xp-context-menu {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #aca899;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+    min-width: 150px;
+    z-index: 1000;
+}
+
+.menu-item {
+    padding: 3px 20px;
+    cursor: default;
+}
+
+.menu-item:hover:not(.disabled) {
+    background-color: #316ac5;
+    color: #fff;
+}
+
+.menu-item.disabled {
+    color: #aca899;
+}
+
+/* 모달 스타일 */
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: auto;
+    z-index: 2000;
+    padding-bottom: 10px;
+}
+
+.modal-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-group.inline {
+    flex-direction: row;
+    align-items: center;
+}
+
+.input-group input {
+    border: 1px solid #7f9db9;
+    padding: 3px;
+}
+
+/* XP 스타일 버튼 */
+.xp-button {
+    background: #ece9d8;
+    border: 1px solid #003ca5;
+    padding: 5px 15px;
+    box-shadow: inset -1px -1px 1px #808080;
+    cursor: pointer;
+}
+
+.xp-button:active {
+    box-shadow: inset 1px 1px 1px #808080;
+}
+
+.modal-footer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+}
+/* 하위 메뉴를 포함한 아이템 설정 */
+.has-submenu {
+    position: relative;
+}
+
+/* 기본적으로 서브메뉴는 숨김 */
+.submenu {
+    display: none;
+    position: absolute;
+    left: 100%; /* 부모 메뉴의 오른쪽 끝에서 시작 */
+    top: -2px;
+    background: white;
+    border: 1px solid #aca899;
+    box-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+    min-width: 150px;
+    list-style: none;
+    padding: 2px;
+}
+
+/* 부모 메뉴에 호버 시 서브메뉴 노출 */
+.has-submenu:hover > .submenu {
+    display: block;
+}
+
+.arrow {
+    font-size: 8px;
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* 서브메뉴 아이템도 일반 메뉴 아이템과 동일한 스타일 적용 */
+.submenu li {
+    padding: 3px 15px;
+    color: black;
+}
+
+.submenu li:hover {
+    background-color: #316ac5;
+    color: white;
+}
+/* 폴더 이름 편집 상태 */
+.folder-name-input {
+    width: 90%;
+    border: 1px solid #7f9db9;
+    background-color: #fff;
+    font-size: 11px;
+    text-align: center;
+    outline: none;
+    margin-top: 2px;
+}
+
+/* 이름이 선택되었을 때의 XP 스타일 블루 블록 */
+.folder-item.selected .folder-name {
+    background-color: #316ac5;
+    color: white;
+}
+/* 상품(파일) 아이콘 */
+.product-file .product-icon {
+    width: 48px;
+    height: 48px;
+    background: url('https://img.icons8.com/color/48/box--v1.png') no-repeat center;
+    margin-bottom: 5px;
+}
+
+/* 상품의 가격 정보를 보여주는 스타일 */
+.product-price {
+    font-size: 11px;
+    color: #555;
+}
+
+/* XP 스타일 모달 내부 상품 입력 폼 */
+.modal-body .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.modal-body .input-row input {
+    flex: 1;
+}
+
+/* CSS에 이 부분을 추가하거나 수정하세요 */
+.store-icon {
+    width: 48px;
+    height: 48px;
+    /* 고전적인 상점 아이콘 URL (Icons8 제공) */
+    background-image: url('https://img.icons8.com/color/48/shop.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-bottom: 5px;
+}
+
+/* 이미지가 등록된 점포의 사진 스타일 */
+.store-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+    </style>
+</head>
+<body>
+<div class="xp-window">
+    <div class="title-bar">
+        <div class="title-text">파일 탐색기 - 점포 관리자</div>
+        <div class="title-buttons">－ □ ×</div>
+    </div>
+
+    <div class="menu-bar">
+        <span>파일(F)</span><span>편집(E)</span><span>보기(V)</span><span>즐겨찾기(A)</span><span>도구(T)</span><span>도움말(H)</span>
+    </div>
+
+    <div class="toolbar">
+        <button id="btn-back" class="nav-btn" onclick="navigateUp()" title="뒤로 가기">
+            <span class="icon-back"></span> 뒤로
+        </button>
+        <button class="nav-btn disabled"><span class="icon-forward"></span></button>
+        <button id="btn-up" class="nav-btn" onclick="navigateUp()" title="상위 폴더로">
+            <span class="icon-up"></span>
+        </button>
+        <div class="separator"></div>
+        <button class="nav-btn"><span class="icon-search"></span> 검색</button>
+        <button class="nav-btn"><span class="icon-folders"></span> 폴더</button>
+    </div>
+
+    <div class="address-bar-container">
+        <span>주소(D)</span>
+        <div class="address-input-wrapper">
+            <img src="folder-small-icon.png" class="address-icon">
+            <input type="text" id="address-input"
+                   th:value="${'C:\' + currentPath.replace(' ', '\')}"
+                   onkeypress="if(event.keyCode==13) navigateTo(this.value)">
+        </div>
+        <button id="btn-go" class="go-btn" onclick="navigateTo(document.getElementById('address-input').value)">이동</button>
+    </div>
+
+    <div id="folder-container" class="folder-view">
+        <th:block th:if="${viewMode == 'STORE'}">
+        <div th:each="folder : ${subFolders}" class="folder-item"
+             th:onclick="|location.href='@{/admin/store(path=${currentPath} + ' ' + ${folder})}'|">
+            <div class="folder-icon"></div>
+            <div class="folder-name" th:text="${folder}">>구/동</div>
+        </div>
+
+        <div th:each="store : ${currentStores}" class="folder-item store-file"
+             th:data-idx="${store.storeIdx}"
+             th:data-name="${store.storeName}"
+             th:onclick="enterStore([[${store.storeIdx}]], [[${store.storeName}]])"
+             th:oncontextmenu="|setTarget(this); return false;|"
+             th:title="|영업시간: ${store.storeOpenTime} ~ ${store.storeCloseTime}|">
+            <div class="store-icon-container">
+                <img th:if="${store.storePictureIdx != null}"
+                     th:src="@{/images(filename=${store.storePictureIdx})}"
+                     style="width:48px; height:48px; object-fit:cover; border-radius:3px;">
+                <div class="store-icon" th:style="${store.storePictureIdx == null ? 'display:block;' : 'display:none;'}"></div>
+            </div>
+            <div class="folder-name" th:text="${store.storeName}">점포명</div>
+        </div>
+        </th:block>
+        <th:block th:if="${viewMode == 'PRODUCT'}">
+            <div th:each="product : ${productList}" class="folder-item product-file"
+                 th:oncontextmenu="|setTargetProduct(this); return false;|">
+                <div class="icon-wrapper">
+                    <img th:if="${product.productPictureIdx != null}" th:src="@{/images(filename=${product.productPictureIdx})}" class="product-thumb">
+                    <div class="product-icon" th:style="${product.productPictureIdx == null ? 'display:block;' : 'display:none;'}"></div>
+                </div>
+                <div class="folder-name" th:text="${product.productName}">상품명</div>
+                <div class="product-price" th:text="${#numbers.formatInteger(product.price, 0, 'COMMA') + '원'}">가격</div>
+            </div>
+        </th:block>
+    </div>
+</div>
+<div id="context-menu" class="xp-context-menu" style="display:none;">
+    <ul>
+        <li class="menu-item disabled">보기(V)</li>
+
+        <li class="menu-item" onclick="location.reload()">새로 고침(E)</li>
+        <li class="menu-item" onclick="handleRename()">이름 바꾸기(M)</li>
+        <li class="menu-item" onclick="handleDelete()">삭제(D)</li>
+        <li class="menu-item" onclick="handleEdit()">속성/수정(R)</li>
+        <hr>
+        <li class="menu-item has-submenu">
+            새로 만들기(W) <span class="arrow">▶</span>
+            <ul class="submenu">
+                <li id="menu-new-address" onclick="addNewAddress()">📁 주소 추가(A)</li>
+                <li id="menu-new-store" onclick="openRegisterModal()">🏪 새 점포 등록(S)</li>
+                <li id="menu-new-product" onclick="openProductModal()" style="display:none;">📦 새 상품 등록(P)</li>
+            </ul>
+        </li>
+        <hr>
+        <li class="menu-item disabled">속성(R)</li>
+    </ul>
+</div>
+<!--메뉴-->
+<div id="register-modal" class="xp-window modal" style="display:none;">
+    <div class="title-bar">
+        <div class="title-text">새 점포 등록 - StoreDto</div>
+        <div class="title-buttons"><span onclick="closeModal()" style="cursor:pointer;">×</span></div>
+    </div>
+    <div class="modal-body">
+        <div class="input-group">
+            <label>점포 아이콘/사진(P):</label>
+            <div class="xp-file-input">
+                <input type="file" id="reg-storeImage" accept="image/*" onchange="previewImage(this)">
+            </div>
+            <div id="image-preview-container" style="margin-top:5px; display:none;">
+                <img id="image-preview" src="" style="width:48px; height:48px; border:1px inset #fff;">
+            </div>
+        </div>
+        <div class="input-group">
+            <label>점포명:</label>
+            <input type="text" id="reg-storeName" placeholder="예: 소라고동 강남점">
+        </div>
+        <div class="input-group">
+            <label>주소:</label>
+            <input type="text" id="reg-storeAddress" readonly>
+        </div>
+        <div class="input-group inline">
+            <label>영업 시작:</label>
+            <input type="time" id="reg-storeOpenTime">
+            <label>영업 종료:</label>
+            <input type="time" id="reg-storeCloseTime">
+        </div>
+        <div class="input-group">
+            <label>이벤트 내용(E):</label>
+            <input type="text" id="reg-eventNote" placeholder="예: 아메리카노 1+1 행사 중!">
+        </div>
+        <div class="input-group inline">
+            <label>이벤트 시작:</label>
+            <input type="time" id="reg-eventStartTime">
+            <label>이벤트 종료:</label>
+            <input type="time" id="reg-eventEndTime">
+        </div>
+        <div class="modal-footer">
+            <button class="xp-button" onclick="registerStore()">확인</button>
+            <button class="xp-button" onclick="closeModal()">취소</button>
+        </div>
+    </div>
+</div>
+<div id="product-modal" class="xp-window modal" style="display:none;">
+    <div class="title-bar">
+        <div class="title-text">새 상품 등록 - StoreProductDto</div>
+        <div class="title-buttons"><span onclick="closeProductModal()" style="cursor:pointer;">×</span></div>
+    </div>
+    <div class="modal-body">
+        <div class="input-group">
+            <label>상품 카테고리:</label>
+            <input type="text" id="prod-category" placeholder="예: 음료, 베이커리">
+        </div>
+        <div class="input-group">
+            <label>상품명:</label>
+            <input type="text" id="prod-productName">
+        </div>
+        <div class="input-row">
+            <div>
+                <label>가격(원):</label>
+                <input type="number" id="prod-price" value="0" style="width: 80px;">
+            </div>
+            <div>
+                <label>할인 가격(원):</label>
+                <input type="number" id="prod-eventPrice" value="0" style="width: 80px;">
+            </div>
+            <div>
+                <label>수량(개):</label>
+                <input type="number" id="prod-productQuantity" value="100" style="width: 60px;">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="xp-button" onclick="registerProduct()">확인</button>
+            <button class="xp-button" onclick="closeProductModal()">취소</button>
+        </div>
+    </div>
+</div>
+<!-- 하위 메뉴-->
+
+<script th:inline="javascript">
+    // 현재 경로를 관리하는 배열 (예: ['C:', 'SoraGodong', 'Seoul'])
+let currentPath = ['C:', 'SoraGodong'];
+
+const addressInput = document.getElementById('address-input');
+const btnBack = document.getElementById('btn-back');
+
+// 주소 업데이트 및 화면 갱신 함수
+function updateView(pathArray) {
+    currentPath = pathArray;
+    const pathString = currentPath.join('\\');
+    addressInput.value = pathString;
+
+    // 여기서 해당 주소의 폴더 목록을 서버에서 가져오거나 필터링하여 출력하는 로직 실행
+    console.log(`${pathString}의 데이터를 불러옵니다...`);
+}
+
+// 뒤로 가기 버튼 (상위 주소로 이동)
+btnBack.addEventListener('click', () => {
+    if (currentPath.length > 1) {
+        currentPath.pop(); // 마지막 경로 제거
+        updateView(currentPath);
+    }
+});
+
+// 주소창 엔터 검색 (이동)
+addressInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        const newPath = addressInput.value.split('\\').filter(p => p !== "");
+        updateView(newPath);
+    }
+});
+
+// 이동 버튼 클릭
+document.getElementById('btn-go').addEventListener('click', () => {
+    const newPath = addressInput.value.split('\\').filter(p => p !== "");
+    updateView(newPath);
+});
+
+const folderView = document.getElementById('folder-container');
+const contextMenu = document.getElementById('context-menu');
+const registerModal = document.getElementById('register-modal');
+const viewMode = [[${viewMode}]];
+const currentPathStr = [[${currentPath}]]; // 서버에서 넘어온 경로 문자열
+
+// 1. 우클릭 시 메뉴 보이기
+folderView.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+
+    // 1. Thymeleaf에서 넘겨준 viewMode 값을 JS 변수로 안전하게 가져옵니다.
+    // 만약 인라인 모드가 안된다면 HTML 어딘가에 hidden input으로 저장해두고 가져와야 합니다.
+
+
+    // 2. 메뉴 엘리먼트들 가져오기
+    const menuStore = document.getElementById('menu-new-store');
+    const menuProduct = document.getElementById('menu-new-product');
+
+    if (viewMode === 'PRODUCT') {
+        if(menuStore) menuStore.style.display = 'none';
+        if(menuProduct) menuProduct.style.display = 'block';
+    } else {
+        if(menuStore) menuStore.style.display = 'block';
+        if(menuProduct) menuProduct.style.display = 'none';
+    }
+
+    // 4. 메뉴 띄우기
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = `${e.pageX}px`;
+    contextMenu.style.top = `${e.pageY}px`;
+});
+
+// 2. 다른 곳 클릭 시 메뉴 숨기기
+document.addEventListener('click', () => {
+    contextMenu.style.display = 'none';
+});
+
+// 3. 등록 모달 열기
+function openRegisterModal() {
+    // 현재 주소창의 값을 등록 폼의 주소칸에 자동 입력
+    document.getElementById('reg-storeAddress').value = document.getElementById('address-input').value;
+    registerModal.style.display = 'block';
+}
+
+function closeModal() {
+    registerModal.style.display = 'none';
+}
+// 4.주소 추가 (단순 하위 지역 폴더 생성)
+function addNewAddress() {
+    const container = document.getElementById('folder-container');
+
+    // 1. 임시 폴더 엘리먼트 생성
+    const newFolder = document.createElement('div');
+    newFolder.className = 'folder-item';
+
+    // 2. XP 스타일: 아이콘 + 입력창 구성
+    newFolder.innerHTML = `
+        <div class="folder-icon"></div>
+        <input type="text" class="folder-name-input" value="새 폴더">
+    `;
+
+    container.appendChild(newFolder);
+
+    // 3. 입력창 포커스 및 텍스트 전체 선택 (XP의 바로 그 느낌!)
+    const input = newFolder.querySelector('.folder-name-input');
+    input.focus();
+    input.select();
+
+    // 4. 입력 완료 처리 (엔터 키 또는 포커스를 잃었을 때)
+    const finishEditing = () => {
+        const folderName = input.value.trim() || "새 폴더";
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'folder-name';
+        nameDiv.innerText = folderName;
+
+        // 입력창을 일반 텍스트 div로 교체
+        newFolder.replaceChild(nameDiv, input);
+
+        // 더블클릭 이벤트 연결 (하위 주소로 진입)
+        newFolder.ondblclick = () => {
+            const currentAddr = document.getElementById('address-input').value;
+            updateView([...currentAddr.split('\\'), folderName]);
+            container.innerHTML = ''; // 진입 시 내부 비우기
+        };
+    };
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finishEditing();
+    });
+
+    input.addEventListener('blur', finishEditing);
+}
+function registerStore() {
+    const name = document.getElementById('reg-storeName').value;
+
+    // 1. 유효성 검사
+    if (!name) {
+        alert("점포명을 입력해주세요!");
+        return;
+    }
+
+    // 2. 서버로 보낼 데이터 준비 (화면에 그리는 대신 서버에 쏜다!)
+    const formData = new FormData();
+
+    // 현재 주소창의 값을 기반으로 DB 주소 생성 (C:\전체지역\서울 -> 전체지역 서울)
+    let rawAddress = document.getElementById('address-input').value;
+    let dbAddress = rawAddress.replace("C:\\전체지역", "").replaceAll("\\", " ").trim();
+
+    formData.append('storeName', name);
+    formData.append('storeAddress', dbAddress);
+    formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
+    formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
+    formData.append('eventNote', document.getElementById('reg-eventNote').value);
+    formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
+    formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
+
+
+
+    // 3. 서버 전송
+    fetch('/admin/api/store', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => {
+        if (res.ok) {
+            alert("서버에 점포 등록 성공!");
+            // 4. 페이지를 새로고침하면 서버가 DB에서 새 점포를 읽어와서 화면에 그려줍니다.
+            location.reload();
+        } else {
+            alert("서버 등록 실패!");
+        }
+    });
+}
+
+// 상위 폴더로 이동하는 함수
+function navigateUp() {
+    let currentPath = [[${currentPath}]]; // Thymeleaf에서 현재 경로를 가져옴
+
+    // "전체지역"이 루트인 경우 더 이상 올라갈 곳이 없음
+    if (currentPath === "전체지역" || !currentPath.includes(" ")) {
+        if (currentPath !== "전체지역") {
+            location.href = "/admin/store?path=전체지역";
+        }
+        return;
+    }
+
+    // 공백을 기준으로 주소를 나누고 마지막 단어 제거
+    let pathParts = currentPath.split(" ");
+    pathParts.pop(); // 마지막 요소(현재 폴더) 제거
+
+    let parentPath = pathParts.join(" ");
+
+    // 상위 주소로 이동
+    location.href = "/admin/store?path=" + encodeURIComponent(parentPath);
+}
+    // 주소 업데이트 및 서버 이동 함수
+function navigateTo(pathString) {
+        // 주소창의 "C:\전체지역\서울" 형태를 "전체지역 서울" 형태로 변환
+        let serverPath = pathString
+            .replace("C:\\", "")
+            .replaceAll("\\", " ")
+            .trim();
+
+        if(!serverPath) serverPath = "전체지역";
+        location.href = '/admin/store?path=' + encodeURIComponent(serverPath);
+}
+
+// 상위 폴더로 이동 (Up 버튼)
+function navigateUp() {
+        // currentPathStr이 "전체지역 서울시 광진구" 라면
+        let parts = currentPathStr.trim().split(" ");
+
+        if (parts.length > 1) {
+            parts.pop(); // 마지막 마디 제거
+            let parentPath = parts.join(" ");
+            location.href = '/admin/store?path=' + encodeURIComponent(parentPath);
+        } else {
+            // 더 이상 올라갈 곳이 없으면 루트로
+            location.href = '/admin/store?path=전체지역';
+        }
+    }
+
+
+
+
+// 미리보기 함수
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('image-preview').src = e.target.result;
+            document.getElementById('image-preview-container').style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+let targetStore = null;
+
+function setTarget(el) {
+    // 우클릭한 요소의 정보를 전역 변수에 저장
+    console.log("우클릭 대상 설정:", el.getAttribute('data-name'));
+    targetStore = {
+        idx: el.getAttribute('data-idx'),
+        name: el.getAttribute('data-name'),
+        element: el
+    };
+}
+
+function handleDelete() {
+    if (!targetStore) return;
+
+    if (confirm(`'${targetStore.name}' 점포를 정말로 삭제하시겠습니까?`)) {
+        fetch(`/admin/api/store/${targetStore.idx}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("삭제되었습니다.");
+                location.reload();
+            }
+        });
+    }
+}
+
+function handleRename() {
+    if (!targetStore) return;
+
+    const nameDiv = targetStore.element.querySelector('.folder-name');
+    const oldName = nameDiv.innerText;
+
+    // 입력창 생성
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'folder-name-input';
+    input.value = oldName;
+
+    targetStore.element.replaceChild(input, nameDiv);
+    input.focus();
+    input.select();
+
+    const updateName = () => {
+        const newName = input.value.trim();
+        if (newName && newName !== oldName) {
+            // 서버에 이름 수정 요청 (StoreDto의 storeName 업데이트)
+            fetch(`/admin/api/store/rename`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storeIdx: targetStore.idx,
+                    storeName: newName
+                })
+            }).then(res => { if(res.ok) location.reload(); });
+        } else {
+            targetStore.element.replaceChild(nameDiv, input);
+        }
+    };
+
+    input.onkeydown = (e) => { if(e.key === 'Enter') updateName(); };
+    input.onblur = updateName;
+}
+// 점포 더블 클릭 시 호출 (Thymeleaf에서 storeIdx를 인자로 넘김)
+function enterStore(storeIdx, storeName) {
+    // 1. 주소창 업데이트 (현재 주소 뒤에 점포명 추가)
+    const currentAddr = document.getElementById('address-input').value;
+    const nextPath = currentAddr + "\\" + storeName;
+
+    // 2. 상품 페이지로 이동 (점포 고유 번호와 함께)
+    location.href = `/admin/store?storeIdx=${storeIdx}&path=${encodeURIComponent(nextPath)}`;
+}
+function registerProduct() {
+    // 1. 현재 URL 쿼리스트링에서 storeIdx를 가져옵니다.
+    const urlParams = new URLSearchParams(window.location.search);
+    const storeIdx = urlParams.get('storeIdx');
+
+    if (!storeIdx) {
+        alert("점포 정보(storeIdx)를 찾을 수 없습니다.");
+        return;
+    }
+
+    const productData = {
+        storeIdx: parseInt(storeIdx),
+        category: document.getElementById('prod-category').value,
+        productName: document.getElementById('prod-productName').value,
+        price: parseInt(document.getElementById('prod-price').value),
+        eventPrice: parseInt(document.getElementById('prod-eventPrice').value) || 0,
+
+        productQuantity: parseInt(document.getElementById('prod-productQuantity').value),
+
+    };
+
+    if (!productData.productName) {
+        alert("상품명을 입력해주세요!");
+        return;
+    }
+
+    fetch('/admin/api/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+    })
+    .then(res => {
+        if(res.ok) {
+            alert("상품이 등록되었습니다.");
+            location.reload();
+        }   else {
+            alert("상품 등록에 실패했습니다.");
+        }
+    }).catch(err => {
+        console.error("에러 발생:", err);
+        alert("서버 통신 중 오류가 발생했습니다.");
+    });
+}
+function openProductModal() {
+    // 상품 등록 모달을 표시
+    const productModal = document.getElementById('product-modal');
+    if (productModal) {
+        productModal.style.display = 'block';
+    }
+}
+function closeProductModal() {
+    document.getElementById('product-modal').style.display = 'none';
+}
+function handleEdit() {
+
+    if (!targetStore){
+        console.error("수정할 대상(targetStore)이 없습니다!");
+        return;
+        }
+        console.log("수정 대상 IDX:", targetStore.idx);
+    // 1. 서버에서 해당 점포의 상세 데이터를 가져옵니다.
+    fetch(`/admin/api/store/${targetStore.idx}`)
+        .then(res => res.json())
+        .then(data => {
+        console.log("서버에서 받은 데이터:", data);
+            // 2. 모달창의 입력칸에 기존 데이터를 채웁니다.
+            document.getElementById('reg-storeName').value = data.storeName;
+            document.getElementById('reg-storeAddress').value = data.storeAddress;
+            document.getElementById('reg-storeOpenTime').value = data.storeOpenTime;
+            document.getElementById('reg-storeCloseTime').value = data.storeCloseTime;
+            document.getElementById('reg-eventNote').value = data.eventNote || "";
+            document.getElementById('reg-eventStartTime').value = data.eventStartTime || "";
+            document.getElementById('reg-eventEndTime').value = data.eventEndTime || "";
+            console.log("값을 가져옴");
+            // 3. 사진 미리보기 처리 (기존 사진이 있다면)
+            if(data.storePictureIdx) {
+                document.getElementById('image-preview').src = `/images?filename=${data.storePictureIdx}`;
+                document.getElementById('image-preview-container').style.display = 'block';
+            }
+
+            // 4. 모달 제목 변경 및 확인 버튼의 함수를 수정용으로 변경
+            document.querySelector('#register-modal .title-text').innerText = "점포 속성 수정 - " + data.storeName;
+            const confirmBtn = document.querySelector('#register-modal .xp-button[onclick="registerStore()"]');
+            confirmBtn.setAttribute('onclick', `updateStore(${data.storeIdx})`);
+            console.log("모달 열기 전");
+            // 5. 모달 열기
+            document.getElementById('register-modal').style.display = 'block';
+        });
+}
+function updateStore(storeIdx) {
+    const formData = new FormData();
+
+    // 수정 데이터 수집
+    formData.append('storeName', document.getElementById('reg-storeName').value);
+    formData.append('storeAddress', document.getElementById('reg-storeAddress').value); // 수정 시엔 이미 가공된 주소일 수 있음
+    formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
+    formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
+    formData.append('eventNote', document.getElementById('reg-eventNote').value);
+    formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
+    formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
+
+    const imageFile = document.getElementById('reg-storeImage').files[0];
+    if (imageFile) formData.append('uploadFile', imageFile);
+
+    // 서버 전송 (PATCH)
+    fetch(`/admin/api/store/${storeIdx}`, {
+        method: 'PATCH',
+        body: formData
+    })
+    .then(res => {
+        if (res.ok) {
+            alert("정보가 성공적으로 수정되었습니다.");
+            location.reload();
+        } else {
+            alert("수정에 실패했습니다.");
+        }
+    })
+    .catch(err => console.error("에러:", err));
+}
+</script>
+</body>
+</html>

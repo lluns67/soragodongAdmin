@@ -397,7 +397,7 @@ body {
         <div class="address-input-wrapper">
             <img src="folder-small-icon.png" class="address-icon">
             <input type="text" id="address-input"
-                   th:value="${'C:\' + currentPath.replace(' ', '\')}"
+                   th:value="${currentPath.replace(' ', '\')}"
                    onkeypress="if(event.keyCode==13) navigateTo(this.value)">
         </div>
         <button id="btn-go" class="go-btn" onclick="navigateTo(document.getElementById('address-input').value)">이동</button>
@@ -543,433 +543,435 @@ body {
 <!-- 하위 메뉴-->
 
 <script th:inline="javascript">
-    // 현재 경로를 관리하는 배열 (예: ['C:', 'SoraGodong', 'Seoul'])
-let currentPath = ['C:', 'SoraGodong'];
+    // 1. 서버에서 넘겨준 경로 문자열 (예: "전체지역 서울 동작구 사당2호점")
+    const currentPathStr = [[${currentPath}]];
 
-const addressInput = document.getElementById('address-input');
-const btnBack = document.getElementById('btn-back');
 
-// 주소 업데이트 및 화면 갱신 함수
-function updateView(pathArray) {
-    currentPath = pathArray;
-    const pathString = currentPath.join('\\');
-    addressInput.value = pathString;
 
-    // 여기서 해당 주소의 폴더 목록을 서버에서 가져오거나 필터링하여 출력하는 로직 실행
-    console.log(`${pathString}의 데이터를 불러옵니다...`);
-}
+    // 2. 이 문자열을 공백 기준으로 잘라서 배열로 만듭니다.
+    // ["전체지역", "서울", "동작구", "사당2호점"]
+    let currentPath = currentPathStr.trim().split(" ");
 
-// 뒤로 가기 버튼 (상위 주소로 이동)
-btnBack.addEventListener('click', () => {
-    if (currentPath.length > 1) {
-        currentPath.pop(); // 마지막 경로 제거
-        updateView(currentPath);
+    // 3. 주소창에도 역슬래시(\)를 붙여서 예쁘게 출력합니다.
+    // address-input의 value가 "전체지역\서울\동작구\사당2호점"이 됩니다.
+    document.getElementById('address-input').value = currentPath.join('\\');
+
+    // 4. 이제 뒤로가기(btnBack)를 누르면?
+    // currentPath.pop()이 실행되면서 ["전체지역", "서울", "동작구"]가 되고,
+    // 정상적으로 한 단계 위로 올라가게 됩니다!
+
+    const addressInput = document.getElementById('address-input');
+    const btnBack = document.getElementById('btn-back');
+
+    // 주소 업데이트 및 화면 갱신 함수
+    function updateView(pathArray) {
+        currentPath = pathArray;
+        const pathString = currentPath.join('\\');
+        addressInput.value = pathString;
+
+        // 여기서 해당 주소의 폴더 목록을 서버에서 가져오거나 필터링하여 출력하는 로직 실행
+        console.log(`${pathString}의 데이터를 불러옵니다...`);
     }
-});
 
-// 주소창 엔터 검색 (이동)
-addressInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
+    // 뒤로 가기 버튼 (상위 주소로 이동)
+    btnBack.addEventListener('click', () => {
+        if (currentPath.length > 1) {
+            currentPath.pop(); // 마지막 경로 제거
+            updateView(currentPath);
+        }
+    });
+
+    // 주소창 엔터 검색 (이동)
+    addressInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const newPath = addressInput.value.split('\\').filter(p => p !== "");
+            updateView(newPath);
+        }
+    });
+
+    // 이동 버튼 클릭
+    document.getElementById('btn-go').addEventListener('click', () => {
         const newPath = addressInput.value.split('\\').filter(p => p !== "");
         updateView(newPath);
+    });
+
+    const folderView = document.getElementById('folder-container');
+    const contextMenu = document.getElementById('context-menu');
+    const registerModal = document.getElementById('register-modal');
+    const viewMode = [[${viewMode}]];
+
+
+    // 1. 우클릭 시 메뉴 보이기
+    folderView.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+
+        // 1. Thymeleaf에서 넘겨준 viewMode 값을 JS 변수로 안전하게 가져옵니다.
+        // 만약 인라인 모드가 안된다면 HTML 어딘가에 hidden input으로 저장해두고 가져와야 합니다.
+
+
+        // 2. 메뉴 엘리먼트들 가져오기
+        const menuStore = document.getElementById('menu-new-store');
+        const menuProduct = document.getElementById('menu-new-product');
+
+        if (viewMode === 'PRODUCT') {
+            if(menuStore) menuStore.style.display = 'none';
+            if(menuProduct) menuProduct.style.display = 'block';
+        } else {
+            if(menuStore) menuStore.style.display = 'block';
+            if(menuProduct) menuProduct.style.display = 'none';
+        }
+
+        // 4. 메뉴 띄우기
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = `${e.pageX}px`;
+        contextMenu.style.top = `${e.pageY}px`;
+    });
+
+    // 2. 다른 곳 클릭 시 메뉴 숨기기
+    document.addEventListener('click', () => {
+        contextMenu.style.display = 'none';
+    });
+
+    // 3. 등록 모달 열기
+    function openRegisterModal() {
+        // 현재 주소창의 값을 등록 폼의 주소칸에 자동 입력
+        document.getElementById('reg-storeAddress').value = document.getElementById('address-input').value;
+        registerModal.style.display = 'block';
     }
-});
 
-// 이동 버튼 클릭
-document.getElementById('btn-go').addEventListener('click', () => {
-    const newPath = addressInput.value.split('\\').filter(p => p !== "");
-    updateView(newPath);
-});
-
-const folderView = document.getElementById('folder-container');
-const contextMenu = document.getElementById('context-menu');
-const registerModal = document.getElementById('register-modal');
-const viewMode = [[${viewMode}]];
-const currentPathStr = [[${currentPath}]]; // 서버에서 넘어온 경로 문자열
-
-// 1. 우클릭 시 메뉴 보이기
-folderView.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-
-    // 1. Thymeleaf에서 넘겨준 viewMode 값을 JS 변수로 안전하게 가져옵니다.
-    // 만약 인라인 모드가 안된다면 HTML 어딘가에 hidden input으로 저장해두고 가져와야 합니다.
-
-
-    // 2. 메뉴 엘리먼트들 가져오기
-    const menuStore = document.getElementById('menu-new-store');
-    const menuProduct = document.getElementById('menu-new-product');
-
-    if (viewMode === 'PRODUCT') {
-        if(menuStore) menuStore.style.display = 'none';
-        if(menuProduct) menuProduct.style.display = 'block';
-    } else {
-        if(menuStore) menuStore.style.display = 'block';
-        if(menuProduct) menuProduct.style.display = 'none';
+    function closeModal() {
+        registerModal.style.display = 'none';
     }
+    // 4.주소 추가 (단순 하위 지역 폴더 생성)
+    function addNewAddress() {
+        const container = document.getElementById('folder-container');
 
-    // 4. 메뉴 띄우기
-    contextMenu.style.display = 'block';
-    contextMenu.style.left = `${e.pageX}px`;
-    contextMenu.style.top = `${e.pageY}px`;
-});
+        // 1. 임시 폴더 엘리먼트 생성
+        const newFolder = document.createElement('div');
+        newFolder.className = 'folder-item';
 
-// 2. 다른 곳 클릭 시 메뉴 숨기기
-document.addEventListener('click', () => {
-    contextMenu.style.display = 'none';
-});
+        // 2. XP 스타일: 아이콘 + 입력창 구성
+        newFolder.innerHTML = `
+            <div class="folder-icon"></div>
+            <input type="text" class="folder-name-input" value="새 폴더">
+        `;
 
-// 3. 등록 모달 열기
-function openRegisterModal() {
-    // 현재 주소창의 값을 등록 폼의 주소칸에 자동 입력
-    document.getElementById('reg-storeAddress').value = document.getElementById('address-input').value;
-    registerModal.style.display = 'block';
-}
+        container.appendChild(newFolder);
 
-function closeModal() {
-    registerModal.style.display = 'none';
-}
-// 4.주소 추가 (단순 하위 지역 폴더 생성)
-function addNewAddress() {
-    const container = document.getElementById('folder-container');
+        // 3. 입력창 포커스 및 텍스트 전체 선택 (XP의 바로 그 느낌!)
+        const input = newFolder.querySelector('.folder-name-input');
+        input.focus();
+        input.select();
 
-    // 1. 임시 폴더 엘리먼트 생성
-    const newFolder = document.createElement('div');
-    newFolder.className = 'folder-item';
+        // 4. 입력 완료 처리 (엔터 키 또는 포커스를 잃었을 때)
+        const finishEditing = () => {
+            const folderName = input.value.trim() || "새 폴더";
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'folder-name';
+            nameDiv.innerText = folderName;
 
-    // 2. XP 스타일: 아이콘 + 입력창 구성
-    newFolder.innerHTML = `
-        <div class="folder-icon"></div>
-        <input type="text" class="folder-name-input" value="새 폴더">
-    `;
+            // 입력창을 일반 텍스트 div로 교체
+            newFolder.replaceChild(nameDiv, input);
 
-    container.appendChild(newFolder);
-
-    // 3. 입력창 포커스 및 텍스트 전체 선택 (XP의 바로 그 느낌!)
-    const input = newFolder.querySelector('.folder-name-input');
-    input.focus();
-    input.select();
-
-    // 4. 입력 완료 처리 (엔터 키 또는 포커스를 잃었을 때)
-    const finishEditing = () => {
-        const folderName = input.value.trim() || "새 폴더";
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'folder-name';
-        nameDiv.innerText = folderName;
-
-        // 입력창을 일반 텍스트 div로 교체
-        newFolder.replaceChild(nameDiv, input);
-
-        // 더블클릭 이벤트 연결 (하위 주소로 진입)
-        newFolder.ondblclick = () => {
-            const currentAddr = document.getElementById('address-input').value;
-            updateView([...currentAddr.split('\\'), folderName]);
-            container.innerHTML = ''; // 진입 시 내부 비우기
+            // 더블클릭 이벤트 연결 (하위 주소로 진입)
+            newFolder.ondblclick = () => {
+                const currentAddr = document.getElementById('address-input').value;
+                updateView([...currentAddr.split('\\'), folderName]);
+                container.innerHTML = ''; // 진입 시 내부 비우기
+            };
         };
-    };
 
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') finishEditing();
-    });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') finishEditing();
+        });
 
-    input.addEventListener('blur', finishEditing);
-}
-function registerStore() {
-    const name = document.getElementById('reg-storeName').value;
-
-    // 1. 유효성 검사
-    if (!name) {
-        alert("점포명을 입력해주세요!");
-        return;
+        input.addEventListener('blur', finishEditing);
     }
+    function registerStore() {
+        const name = document.getElementById('reg-storeName').value;
 
-    // 2. 서버로 보낼 데이터 준비 (화면에 그리는 대신 서버에 쏜다!)
-    const formData = new FormData();
-
-    // 현재 주소창의 값을 기반으로 DB 주소 생성 (C:\전체지역\서울 -> 전체지역 서울)
-    let rawAddress = document.getElementById('address-input').value;
-    let dbAddress = rawAddress.replace("C:\\전체지역", "").replaceAll("\\", " ").trim();
-
-    formData.append('storeName', name);
-    formData.append('storeAddress', dbAddress);
-    formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
-    formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
-    formData.append('eventNote', document.getElementById('reg-eventNote').value);
-    formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
-    formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
-
-
-
-    // 3. 서버 전송
-    fetch('/admin/api/store', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => {
-        if (res.ok) {
-            alert("서버에 점포 등록 성공!");
-            // 4. 페이지를 새로고침하면 서버가 DB에서 새 점포를 읽어와서 화면에 그려줍니다.
-            location.reload();
-        } else {
-            alert("서버 등록 실패!");
+        // 1. 유효성 검사
+        if (!name) {
+            alert("점포명을 입력해주세요!");
+            return;
         }
-    });
-}
 
-// 상위 폴더로 이동하는 함수
-function navigateUp() {
-    let currentPath = [[${currentPath}]]; // Thymeleaf에서 현재 경로를 가져옴
+        // 2. 서버로 보낼 데이터 준비 (화면에 그리는 대신 서버에 쏜다!)
+        const formData = new FormData();
 
-    // "전체지역"이 루트인 경우 더 이상 올라갈 곳이 없음
-    if (currentPath === "전체지역" || !currentPath.includes(" ")) {
-        if (currentPath !== "전체지역") {
-            location.href = "/admin/store?path=전체지역";
-        }
-        return;
-    }
+        // 현재 주소창의 값을 기반으로 DB 주소 생성 (C:\전체지역\서울 -> 전체지역 서울)
+        let rawAddress = document.getElementById('address-input').value;
+        let dbAddress = rawAddress.replace("전체지역", "").replaceAll("\\", " ").trim();
 
-    // 공백을 기준으로 주소를 나누고 마지막 단어 제거
-    let pathParts = currentPath.split(" ");
-    pathParts.pop(); // 마지막 요소(현재 폴더) 제거
-
-    let parentPath = pathParts.join(" ");
-
-    // 상위 주소로 이동
-    location.href = "/admin/store?path=" + encodeURIComponent(parentPath);
-}
-    // 주소 업데이트 및 서버 이동 함수
-function navigateTo(pathString) {
-        // 주소창의 "C:\전체지역\서울" 형태를 "전체지역 서울" 형태로 변환
-        let serverPath = pathString
-            .replace("C:\\", "")
-            .replaceAll("\\", " ")
-            .trim();
-
-        if(!serverPath) serverPath = "전체지역";
-        location.href = '/admin/store?path=' + encodeURIComponent(serverPath);
-}
-
-// 상위 폴더로 이동 (Up 버튼)
-function navigateUp() {
-        // currentPathStr이 "전체지역 서울시 광진구" 라면
-        let parts = currentPathStr.trim().split(" ");
-
-        if (parts.length > 1) {
-            parts.pop(); // 마지막 마디 제거
-            let parentPath = parts.join(" ");
-            location.href = '/admin/store?path=' + encodeURIComponent(parentPath);
-        } else {
-            // 더 이상 올라갈 곳이 없으면 루트로
-            location.href = '/admin/store?path=전체지역';
-        }
-    }
+        formData.append('storeName', name);
+        formData.append('storeAddress', dbAddress);
+        formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
+        formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
+        formData.append('eventNote', document.getElementById('reg-eventNote').value);
+        formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
+        formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
 
 
 
-
-// 미리보기 함수
-function previewImage(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('image-preview').src = e.target.result;
-            document.getElementById('image-preview-container').style.display = 'block';
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-let targetStore = null;
-
-function setTarget(el) {
-    // 우클릭한 요소의 정보를 전역 변수에 저장
-    console.log("우클릭 대상 설정:", el.getAttribute('data-name'));
-    targetStore = {
-        idx: el.getAttribute('data-idx'),
-        name: el.getAttribute('data-name'),
-        element: el
-    };
-}
-
-function handleDelete() {
-    if (!targetStore) return;
-
-    if (confirm(`'${targetStore.name}' 점포를 정말로 삭제하시겠습니까?`)) {
-        fetch(`/admin/api/store/${targetStore.idx}`, {
-            method: 'DELETE'
+        // 3. 서버 전송
+        fetch('/admin/api/store', {
+            method: 'POST',
+            body: formData
         })
-        .then(response => {
-            if (response.ok) {
-                alert("삭제되었습니다.");
+        .then(res => {
+            if (res.ok) {
+                alert("서버에 점포 등록 성공!");
+                // 4. 페이지를 새로고침하면 서버가 DB에서 새 점포를 읽어와서 화면에 그려줍니다.
                 location.reload();
+            } else {
+                alert("서버 등록 실패!");
             }
         });
     }
-}
 
-function handleRename() {
-    if (!targetStore) return;
+    // 상위 폴더로 이동하는 함수
+    function navigateUp() {
+    // 상단에서 이미 정의된 currentPath 배열을 사용합니다.
+    if (currentPath.length > 1) {
+        // 1. 마지막 경로 하나 제거
+        currentPath.pop();
 
-    const nameDiv = targetStore.element.querySelector('.folder-name');
-    const oldName = nameDiv.innerText;
-
-    // 입력창 생성
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'folder-name-input';
-    input.value = oldName;
-
-    targetStore.element.replaceChild(input, nameDiv);
-    input.focus();
-    input.select();
-
-    const updateName = () => {
-        const newName = input.value.trim();
-        if (newName && newName !== oldName) {
-            // 서버에 이름 수정 요청 (StoreDto의 storeName 업데이트)
-            fetch(`/admin/api/store/rename`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    storeIdx: targetStore.idx,
-                    storeName: newName
-                })
-            }).then(res => { if(res.ok) location.reload(); });
-        } else {
-            targetStore.element.replaceChild(nameDiv, input);
-        }
-    };
-
-    input.onkeydown = (e) => { if(e.key === 'Enter') updateName(); };
-    input.onblur = updateName;
-}
-// 점포 더블 클릭 시 호출 (Thymeleaf에서 storeIdx를 인자로 넘김)
-function enterStore(storeIdx, storeName) {
-    // 1. 주소창 업데이트 (현재 주소 뒤에 점포명 추가)
-    const currentAddr = document.getElementById('address-input').value;
-    const nextPath = currentAddr + "\\" + storeName;
-
-    // 2. 상품 페이지로 이동 (점포 고유 번호와 함께)
-    location.href = `/admin/store?storeIdx=${storeIdx}&path=${encodeURIComponent(nextPath)}`;
-}
-function registerProduct() {
-    // 1. 현재 URL 쿼리스트링에서 storeIdx를 가져옵니다.
-    const urlParams = new URLSearchParams(window.location.search);
-    const storeIdx = urlParams.get('storeIdx');
-
-    if (!storeIdx) {
-        alert("점포 정보(storeIdx)를 찾을 수 없습니다.");
-        return;
-    }
-
-    const productData = {
-        storeIdx: parseInt(storeIdx),
-        category: document.getElementById('prod-category').value,
-        productName: document.getElementById('prod-productName').value,
-        price: parseInt(document.getElementById('prod-price').value),
-        eventPrice: parseInt(document.getElementById('prod-eventPrice').value) || 0,
-
-        productQuantity: parseInt(document.getElementById('prod-productQuantity').value),
-
-    };
-
-    if (!productData.productName) {
-        alert("상품명을 입력해주세요!");
-        return;
-    }
-
-    fetch('/admin/api/product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData)
-    })
-    .then(res => {
-        if(res.ok) {
-            alert("상품이 등록되었습니다.");
-            location.reload();
-        }   else {
-            alert("상품 등록에 실패했습니다.");
-        }
-    }).catch(err => {
-        console.error("에러 발생:", err);
-        alert("서버 통신 중 오류가 발생했습니다.");
-    });
-}
-function openProductModal() {
-    // 상품 등록 모달을 표시
-    const productModal = document.getElementById('product-modal');
-    if (productModal) {
-        productModal.style.display = 'block';
+        // 2. 남은 경로들을 공백으로 합쳐서 서버에 요청
+        const parentPath = currentPath.join(" ");
+        location.href = "/admin/store?path=" + encodeURIComponent(parentPath);
+    } else {
+        // 더 이상 올라갈 곳이 없으면 전체지역으로 이동
+        location.href = "/admin/store?path=전체지역";
     }
 }
-function closeProductModal() {
-    document.getElementById('product-modal').style.display = 'none';
-}
-function handleEdit() {
+        // 주소 업데이트 및 서버 이동 함수
 
-    if (!targetStore){
-        console.error("수정할 대상(targetStore)이 없습니다!");
-        return;
-        }
-        console.log("수정 대상 IDX:", targetStore.idx);
-    // 1. 서버에서 해당 점포의 상세 데이터를 가져옵니다.
-    fetch(`/admin/api/store/${targetStore.idx}`)
-        .then(res => res.json())
-        .then(data => {
-        console.log("서버에서 받은 데이터:", data);
-            // 2. 모달창의 입력칸에 기존 데이터를 채웁니다.
-            document.getElementById('reg-storeName').value = data.storeName;
-            document.getElementById('reg-storeAddress').value = data.storeAddress;
-            document.getElementById('reg-storeOpenTime').value = data.storeOpenTime;
-            document.getElementById('reg-storeCloseTime').value = data.storeCloseTime;
-            document.getElementById('reg-eventNote').value = data.eventNote || "";
-            document.getElementById('reg-eventStartTime').value = data.eventStartTime || "";
-            document.getElementById('reg-eventEndTime').value = data.eventEndTime || "";
-            console.log("값을 가져옴");
-            // 3. 사진 미리보기 처리 (기존 사진이 있다면)
-            if(data.storePictureIdx) {
-                document.getElementById('image-preview').src = `/images?filename=${data.storePictureIdx}`;
+function navigateTo(pathString) {
+    if (!pathString) return;
+
+    // 주소창의 \를 공백으로 치환하여 서버로 전송
+    let serverPath = pathString
+        .replace("C:\\", "")
+        .replaceAll("\\", " ")
+        .trim();
+
+    location.href = '/admin/store?path=' + encodeURIComponent(serverPath);
+}
+
+
+
+
+    // 미리보기 함수
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('image-preview').src = e.target.result;
                 document.getElementById('image-preview-container').style.display = 'block';
             }
-
-            // 4. 모달 제목 변경 및 확인 버튼의 함수를 수정용으로 변경
-            document.querySelector('#register-modal .title-text').innerText = "점포 속성 수정 - " + data.storeName;
-            const confirmBtn = document.querySelector('#register-modal .xp-button[onclick="registerStore()"]');
-            confirmBtn.setAttribute('onclick', `updateStore(${data.storeIdx})`);
-            console.log("모달 열기 전");
-            // 5. 모달 열기
-            document.getElementById('register-modal').style.display = 'block';
-        });
-}
-function updateStore(storeIdx) {
-    const formData = new FormData();
-
-    // 수정 데이터 수집
-    formData.append('storeName', document.getElementById('reg-storeName').value);
-    formData.append('storeAddress', document.getElementById('reg-storeAddress').value); // 수정 시엔 이미 가공된 주소일 수 있음
-    formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
-    formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
-    formData.append('eventNote', document.getElementById('reg-eventNote').value);
-    formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
-    formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
-
-    const imageFile = document.getElementById('reg-storeImage').files[0];
-    if (imageFile) formData.append('uploadFile', imageFile);
-
-    // 서버 전송 (PATCH)
-    fetch(`/admin/api/store/${storeIdx}`, {
-        method: 'PATCH',
-        body: formData
-    })
-    .then(res => {
-        if (res.ok) {
-            alert("정보가 성공적으로 수정되었습니다.");
-            location.reload();
-        } else {
-            alert("수정에 실패했습니다.");
+            reader.readAsDataURL(input.files[0]);
         }
-    })
-    .catch(err => console.error("에러:", err));
-}
+    }
+
+    let targetStore = null;
+
+    function setTarget(el) {
+        // 우클릭한 요소의 정보를 전역 변수에 저장
+        console.log("우클릭 대상 설정:", el.getAttribute('data-name'));
+        targetStore = {
+            idx: el.getAttribute('data-idx'),
+            name: el.getAttribute('data-name'),
+            element: el
+        };
+    }
+
+    function handleDelete() {
+        if (!targetStore) return;
+
+        if (confirm(`'${targetStore.name}' 점포를 정말로 삭제하시겠습니까?`)) {
+            fetch(`/admin/api/store/${targetStore.idx}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("삭제되었습니다.");
+                    location.reload();
+                }
+            });
+        }
+    }
+
+    function handleRename() {
+        if (!targetStore) return;
+
+        const nameDiv = targetStore.element.querySelector('.folder-name');
+        const oldName = nameDiv.innerText;
+
+        // 입력창 생성
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'folder-name-input';
+        input.value = oldName;
+
+        targetStore.element.replaceChild(input, nameDiv);
+        input.focus();
+        input.select();
+
+        const updateName = () => {
+            const newName = input.value.trim();
+            if (newName && newName !== oldName) {
+                // 서버에 이름 수정 요청 (StoreDto의 storeName 업데이트)
+                fetch(`/admin/api/store/rename`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        storeIdx: targetStore.idx,
+                        storeName: newName
+                    })
+                }).then(res => { if(res.ok) location.reload(); });
+            } else {
+                targetStore.element.replaceChild(nameDiv, input);
+            }
+        };
+
+        input.onkeydown = (e) => { if(e.key === 'Enter') updateName(); };
+        input.onblur = updateName;
+    }
+    // 점포 더블 클릭 시 호출 (Thymeleaf에서 storeIdx를 인자로 넘김)
+    function enterStore(storeIdx, storeName) {
+        // 1. 주소창 업데이트 (현재 주소 뒤에 점포명 추가)
+        const currentAddr = document.getElementById('address-input').value;
+
+        // 2. 주소창에 'C:\'가 포함되어 있다면 제거하고, 모든 '\'를 ' '(공백)으로 바꿉니다.
+        let cleanAddr = currentAddr
+        .replace("C:\\", "")
+        .replaceAll("\\", " ")
+        .trim();
+
+        const nextPath = cleanAddr + " " + storeName;
+
+        // 2. 상품 페이지로 이동 (점포 고유 번호와 함께)
+        location.href = `/admin/store?storeIdx=${storeIdx}&path=${encodeURIComponent(nextPath)}`;
+    }
+    function registerProduct() {
+        // 1. 현재 URL 쿼리스트링에서 storeIdx를 가져옵니다.
+        const urlParams = new URLSearchParams(window.location.search);
+        const storeIdx = urlParams.get('storeIdx');
+
+        if (!storeIdx) {
+            alert("점포 정보(storeIdx)를 찾을 수 없습니다.");
+            return;
+        }
+
+        const productData = {
+            storeIdx: parseInt(storeIdx),
+            category: document.getElementById('prod-category').value,
+            productName: document.getElementById('prod-productName').value,
+            price: parseInt(document.getElementById('prod-price').value),
+            eventPrice: parseInt(document.getElementById('prod-eventPrice').value) || 0,
+
+            productQuantity: parseInt(document.getElementById('prod-productQuantity').value),
+
+        };
+
+        if (!productData.productName) {
+            alert("상품명을 입력해주세요!");
+            return;
+        }
+
+        fetch('/admin/api/product', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        })
+        .then(res => {
+            if(res.ok) {
+                alert("상품이 등록되었습니다.");
+                location.reload();
+            }   else {
+                alert("상품 등록에 실패했습니다.");
+            }
+        }).catch(err => {
+            console.error("에러 발생:", err);
+            alert("서버 통신 중 오류가 발생했습니다.");
+        });
+    }
+    function openProductModal() {
+        // 상품 등록 모달을 표시
+        const productModal = document.getElementById('product-modal');
+        if (productModal) {
+            productModal.style.display = 'block';
+        }
+    }
+    function closeProductModal() {
+        document.getElementById('product-modal').style.display = 'none';
+    }
+    function handleEdit() {
+
+        if (!targetStore){
+            console.error("수정할 대상(targetStore)이 없습니다!");
+            return;
+            }
+            console.log("수정 대상 IDX:", targetStore.idx);
+        // 1. 서버에서 해당 점포의 상세 데이터를 가져옵니다.
+        fetch(`/admin/api/store/${targetStore.idx}`)
+            .then(res => res.json())
+            .then(data => {
+            console.log("서버에서 받은 데이터:", data);
+                // 2. 모달창의 입력칸에 기존 데이터를 채웁니다.
+                document.getElementById('reg-storeName').value = data.storeName;
+                document.getElementById('reg-storeAddress').value = data.storeAddress;
+                document.getElementById('reg-storeOpenTime').value = data.storeOpenTime;
+                document.getElementById('reg-storeCloseTime').value = data.storeCloseTime;
+                document.getElementById('reg-eventNote').value = data.eventNote || "";
+                document.getElementById('reg-eventStartTime').value = data.eventStartTime || "";
+                document.getElementById('reg-eventEndTime').value = data.eventEndTime || "";
+                console.log("값을 가져옴");
+                // 3. 사진 미리보기 처리 (기존 사진이 있다면)
+                if(data.storePictureIdx) {
+                    document.getElementById('image-preview').src = `/images?filename=${data.storePictureIdx}`;
+                    document.getElementById('image-preview-container').style.display = 'block';
+                }
+
+                // 4. 모달 제목 변경 및 확인 버튼의 함수를 수정용으로 변경
+                document.querySelector('#register-modal .title-text').innerText = "점포 속성 수정 - " + data.storeName;
+                const confirmBtn = document.querySelector('#register-modal .xp-button[onclick="registerStore()"]');
+                confirmBtn.setAttribute('onclick', `updateStore(${data.storeIdx})`);
+                console.log("모달 열기 전");
+                // 5. 모달 열기
+                document.getElementById('register-modal').style.display = 'block';
+            });
+    }
+    function updateStore(storeIdx) {
+        const formData = new FormData();
+
+        // 수정 데이터 수집
+        formData.append('storeName', document.getElementById('reg-storeName').value);
+        formData.append('storeAddress', document.getElementById('reg-storeAddress').value); // 수정 시엔 이미 가공된 주소일 수 있음
+        formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
+        formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
+        formData.append('eventNote', document.getElementById('reg-eventNote').value);
+        formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
+        formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
+
+        const imageFile = document.getElementById('reg-storeImage').files[0];
+        if (imageFile) formData.append('uploadFile', imageFile);
+
+        // 서버 전송 (PATCH)
+        fetch(`/admin/api/store/${storeIdx}`, {
+            method: 'PATCH',
+            body: formData
+        })
+        .then(res => {
+            if (res.ok) {
+                alert("정보가 성공적으로 수정되었습니다.");
+                location.reload();
+            } else {
+                alert("수정에 실패했습니다.");
+            }
+        })
+        .catch(err => console.error("에러:", err));
+    }
 </script>
 </body>
 </html>

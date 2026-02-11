@@ -1,10 +1,11 @@
 package com.scit.soragodong.controller;
 
+import com.scit.soragodong.domain.dto.OwnerStoreDto;
 import com.scit.soragodong.domain.dto.StoreDto;
 import com.scit.soragodong.domain.dto.StoreProductDto;
 import com.scit.soragodong.exception.ErrorCode;
+import com.scit.soragodong.service.AdminStoreService;
 import com.scit.soragodong.service.TimesaleService;
-import com.scit.soragodong.util.FileUploadUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -30,7 +30,8 @@ import java.util.TreeSet;
 public class AdminController {
 
     private final TimesaleService timeSaleService;
-
+	private final AdminStoreService adminStoreService;
+	
     @GetMapping("store")
     public String store(@RequestParam(value = "path", required = false, defaultValue = "전체지역") String path
             ,@RequestParam(value = "storeIdx", required = false) Integer storeIdx
@@ -93,24 +94,19 @@ public class AdminController {
     @ResponseBody
     @PostMapping("api/store")
     public String registerStore(
-            @ModelAttribute StoreDto storeDto, // @RequestBody 대신 @ModelAttribute 사용
-            @RequestParam(value="uploadFile", required=false) MultipartFile uploadFile) {
-			log.debug(storeDto.toString());
-        if (uploadFile != null && !uploadFile.isEmpty()) {
-            // 1. 파일 저장 로직 (예: 설정된 경로에 저장 후 저장된 파일명 반환)
-            String savedFileName = null;
-            try {
-                savedFileName = FileUploadUtil.uploadFile(uploadFile);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            
-        }
-
-        timeSaleService.createStore(storeDto);
+			@ModelAttribute OwnerStoreDto ownerStoreDto // @RequestBody 대신 @ModelAttribute 사용
+			) {
+			log.debug(ownerStoreDto.toString());
+		
+		
+		
+		
+   
+		
+		adminStoreService.registerNewStoreWithAccount(ownerStoreDto);
         return "success";
     }
+	
     // 삭제 (isUse를 0으로 변경)
     @DeleteMapping("api/store/{idx}")
     @ResponseBody
@@ -159,5 +155,8 @@ public class AdminController {
         timeSaleService.insertProduct(productDto);
         return "success";
     }
-
+	@GetMapping("index2")
+	public String index2admin(){
+		return "admin/index2";
+	}
 }

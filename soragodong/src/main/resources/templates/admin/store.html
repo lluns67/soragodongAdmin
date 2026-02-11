@@ -480,6 +480,17 @@ body {
             <label>점포명:</label>
             <input type="text" id="reg-storeName" placeholder="예: 소라고동 강남점">
         </div>
+        <div style="border: 1px dashed #999; padding: 10px; margin-top: 10px; background: #f0f0f0;">
+            <p style="font-weight: bold; margin-bottom: 5px;">🔑 점주 계정 생성</p>
+            <div class="input-group">
+                <label>점주 ID:</label>
+                <input type="text" id="reg-ownerId" placeholder="아이디 입력">
+            </div>
+            <div class="input-group">
+                <label>임시 PW:</label>
+                <input type="password" id="reg-ownerPw" placeholder="비밀번호 입력">
+            </div>
+        </div>
         <div class="input-group">
             <label>주소:</label>
             <input type="text" id="reg-storeAddress" readonly>
@@ -705,11 +716,14 @@ body {
 
         formData.append('storeName', name);
         formData.append('storeAddress', dbAddress);
-        formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);
-        formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);
-        formData.append('eventNote', document.getElementById('reg-eventNote').value);
-        formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);
-        formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);
+<!--  추가한거      -->
+        formData.append('ownerId', document.getElementById('reg-ownerId').value);
+        formData.append('ownerPw', document.getElementById('reg-ownerPw').value);
+<!--        formData.append('storeOpenTime', document.getElementById('reg-storeOpenTime').value);-->
+<!--        formData.append('storeCloseTime', document.getElementById('reg-storeCloseTime').value);-->
+<!--        formData.append('eventNote', document.getElementById('reg-eventNote').value);-->
+<!--        formData.append('eventStartTime', document.getElementById('reg-eventStartTime').value);-->
+<!--        formData.append('eventEndTime', document.getElementById('reg-eventEndTime').value);-->
 
 
 

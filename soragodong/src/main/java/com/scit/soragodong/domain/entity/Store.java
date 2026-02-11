@@ -26,10 +26,10 @@ public class Store {
     @Column(name = "STORE_ADDRESS", nullable = false, length = 200)
     private String storeAddress;
 
-    @Column(name = "STORE_OPEN_TIME", nullable = false)
+    @Column(name = "STORE_OPEN_TIME", nullable = true)
     private LocalTime storeOpenTime;
 
-    @Column(name = "STORE_CLOSE_TIME", nullable = false)
+    @Column(name = "STORE_CLOSE_TIME", nullable = true)
     private LocalTime storeCloseTime;
 
     @Column(name = "EVENT_START_TIME")
@@ -60,4 +60,8 @@ public class Store {
 
     @Column(name = "STORE_LNG")
     private Double storeLng;
+	
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "OWNER_IDX", referencedColumnName = "ADMIN_IDX", unique = true)
+	private Admin owner; // OWNER_ID 칼럼 생성 및 ADMIN_IDX와 연결
 }

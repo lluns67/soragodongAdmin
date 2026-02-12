@@ -155,8 +155,24 @@ public class AdminController {
         timeSaleService.insertProduct(productDto);
         return "success";
     }
+	
+	// 관리자 메인 화면(대시보드)
 	@GetMapping("index2")
 	public String index2admin(){
 		return "admin/index2";
 	}
+	
+	// 전체 사용자 조회 화면
+	@GetMapping("user-list")
+	public String userlist(){
+		return "admin/user-list";
+	}
+	
+	
+	// 신고 조회
+	@GetMapping("total-report")
+	public String totalreport(){
+		return "admin/total-report";
+	}
+	
 }

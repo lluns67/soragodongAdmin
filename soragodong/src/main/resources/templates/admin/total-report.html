@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="/assets/images/icon/favicon.ico">
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/assets/css/themify-icons.css">
+    <link rel="stylesheet" href="/assets/css/metisMenu.css">
+    <link rel="stylesheet" href="/assets/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="/assets/css/slicknav.min.css">
+    <!-- amchart css -->
+    <link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+    <!-- others css -->
+    <link rel="stylesheet" href="/assets/css/typography.css">
+    <link rel="stylesheet" href="/assets/css/default-css.css">
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+    <!-- modernizr css -->
+    <script src="/assets/js/vendor/modernizr-2.8.3.min.js"></script>
+</head>
+<body>
+<div class="main-content-inner">
+    <div class="row">
+        <div class="col-12 mt-5">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="header-title mb-0">전체 신고 처리 목록</h4>
+                        <a href="/admin/index2" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa fa-home"></i> 대시보드로 돌아가기
+                        </a>
+                    </div>
+
+                    <div class="single-table">
+                        <div class="table-responsive">
+                            <table class="table table-hover text-center">
+                                <thead class="text-uppercase bg-light">
+                                <tr>
+                                    <th scope="col">신고번호</th>
+                                    <th scope="col">유형</th>
+                                    <th scope="col">신고 대상(ID)</th>
+                                    <th scope="col">신고자</th>
+                                    <th scope="col">신고 사유</th>
+                                    <th scope="col">신고일</th>
+                                    <th scope="col">처리 상태</th>
+                                    <th scope="col">관리</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <th scope="row">REP_001</th>
+                                    <td>게시글</td>
+                                    <td><a href="#" class="text-primary">post_123</a></td>
+                                    <td>patrick_star</td>
+                                    <td>부적절한 홍보성 문구</td>
+                                    <td>2026-02-11</td>
+                                    <td><span class="badge badge-warning">대기 중</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-info" onclick="openReportModal('REP_001')">상세보기</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">REP_002</th>
+                                    <td>댓글</td>
+                                    <td><a href="#" class="text-primary">comment_45</a></td>
+                                    <td>squidward_tentacles</td>
+                                    <td>욕설 및 비방</td>
+                                    <td>2026-02-12</td>
+                                    <td><span class="badge badge-success">처리 완료</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-secondary" disabled>처리 완료</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reportModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">신고 상세 내역</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <h6>신고 내용</h6>
+                <p class="text-muted mb-3" id="modal-report-content">이 게시물은 도배성 게시물입니다...</p>
+                <hr>
+                <h6>처리 선택</h6>
+                <div class="form-group mt-2">
+                    <select class="form-control" id="report-action">
+                        <option value="dismiss">반려 (허위 신고)</option>
+                        <option value="delete">내용 삭제</option>
+                        <option value="ban">내용 삭제 및 유저 정지</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>관리자 메모</label>
+                    <textarea class="form-control" rows="3" placeholder="처리 사유를 입력하세요."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+                <button type="button" class="btn btn-danger" onclick="submitReportAction()">처리 적용</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- offset area end -->
+<!-- jquery latest version -->
+<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
+<!-- bootstrap 4 js -->
+<script src="/assets/js/popper.min.js"></script>
+<script src="/assets/js/bootstrap.min.js"></script>
+<script src="/assets/js/owl.carousel.min.js"></script>
+<script src="/assets/js/metisMenu.min.js"></script>
+<script src="/assets/js/jquery.slimscroll.min.js"></script>
+<script src="/assets/js/jquery.slicknav.min.js"></script>
+
+<!-- start chart js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+<!-- start highcharts js -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<!-- start zingchart js -->
+<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+<script>
+    zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
+    ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9", "ee6b7db5b51705a13dc2339db3edaf6d"];
+</script>
+<!-- all line chart activation -->
+<script src="/assets/js/line-chart.js"></script>
+<!-- all bar chart activation -->
+<script src="/assets/js/bar-chart.js"></script>
+<!-- all pie chart -->
+<script src="/assets/js/pie-chart.js"></script>
+<!-- others plugins -->
+<script src="/assets/js/plugins.js"></script>
+<script src="/assets/js/scripts.js"></script>
+</body>
+</html>

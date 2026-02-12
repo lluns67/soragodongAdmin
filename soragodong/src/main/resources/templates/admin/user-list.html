@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="/assets/images/icon/favicon.ico">
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/assets/css/themify-icons.css">
+    <link rel="stylesheet" href="/assets/css/metisMenu.css">
+    <link rel="stylesheet" href="/assets/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="/assets/css/slicknav.min.css">
+    <!-- amchart css -->
+    <link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+    <!-- others css -->
+    <link rel="stylesheet" href="/assets/css/typography.css">
+    <link rel="stylesheet" href="/assets/css/default-css.css">
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+    <!-- modernizr css -->
+    <script src="/assets/js/vendor/modernizr-2.8.3.min.js"></script>
+</head>
+<body>
+<div class="main-content-inner">
+    <div class="row">
+        <div class="col-12 mt-5">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="header-title mb-0">전체 가입자 목록</h4>
+                        <a href="/admin/index2" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa fa-home"></i> 대시보드로 돌아가기
+                        </a>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <select class="custom-select" id="user-filter">
+                                <option selected>전체 상태</option>
+                                <option value="active">활성</option>
+                                <option value="banned">정지</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" placeholder="아이디 또는 이름 검색..." id="user-search">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-block">검색</button>
+                        </div>
+                    </div>
+
+                    <div class="single-table">
+                        <div class="table-responsive">
+                            <table class="table table-hover progress-table text-center">
+                                <thead class="text-uppercase">
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">아이디</th>
+                                    <th scope="col">이름</th>
+                                    <th scope="col">가입일</th>
+                                    <th scope="col">생년월일</th>
+                                    <th scope="col">전화번호</th>
+                                    <th scope="col">거주지역</th>
+                                    <th scope="col">게시물 수</th>
+                                    <th scope="col">매너 점수</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col">경고횟수</th>
+                                    <th scope="col">설정</th>
+
+                                </tr>
+                                </thead>
+                                <tbody id="user-table-body">
+                                <tr>
+                                    <th scope="row">1</th>
+                                    <td>spongebob77</td>
+                                    <td>스폰지밥</td>
+                                    <td>2026-02-10</td>
+                                    <td>2007-02-10</td>
+                                    <td>010-1234-5678</td>
+                                    <td>깊은 바닷 속 파인애플</td>
+                                    <td onclick="location.href='/admin/total-post.html?userId=spongebob77'" style="cursor:pointer; color: blue; text-decoration: underline;">
+                                        31
+                                    </td>
+                                    <td>36.5</td>
+                                    <td><span class="status-p bg-primary">활성</span></td>
+                                    <td class="warning-count-cell" data-user-id="spongebob77">0</td>
+                                    <td>
+                                        <ul class="d-flex justify-content-center">
+                                            <li class="mr-3">
+                                                <a class="text-secondary edit-warning-btn" title="경고 횟수 수정">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                            </li>
+                                            <li><a href="#" class="text-danger" title="정지"><i class="ti-trash"></i></a></li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="pagination_area pull-right mt-5">
+                        <ul>
+                            <li><a href="#"><i class="fa fa-chevron-left"></i></a></li>
+                            <li class="active"><a href="#">1</a></li>
+                            <li><a href="#">2</a></li>
+                            <li><a href="#"><i class="fa fa-chevron-right"></i></a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+    // 1. 수정 아이콘 클릭 시 동작
+    $(document).on('click', '.edit-warning-btn', function() {
+        const row = $(this).closest('tr');
+        const countCell = row.find('.warning-count-cell');
+
+        // 이미 입력창인 경우 중복 처리 방지
+        if (countCell.find('input').length > 0) return;
+
+        const currentVal = countCell.text();
+        const userId = countCell.data('user-id');
+
+        // 입력창으로 교체
+        const inputHtml = `<input type="number" class="form-control form-control-sm text-center mx-auto"
+                            style="width: 60px;" value="${currentVal}">`;
+        countCell.html(inputHtml);
+        countCell.find('input').focus();
+    });
+
+    // 2. 입력창에서 포커스 아웃 시 (변경 값 저장)
+    $(document).on('blur', '.warning-count-cell input', function() {
+        const cell = $(this).parent();
+        const newVal = $(this).val();
+        const userId = cell.data('user-id');
+
+        // 서버 전송 로직 (예시)
+        /*
+        $.ajax({
+            url: '/admin/api/user/warning',
+            method: 'PATCH',
+            data: { userId: userId, count: newVal },
+            success: function() {
+                cell.text(newVal); // 성공 시 텍스트로 환원
+            },
+            error: function() {
+                alert("수정에 실패했습니다.");
+                location.reload();
+            }
+        });
+        */
+
+        // 임시: 서버 연동 없이 화면만 바꿀 때
+        cell.text(newVal);
+    });
+});
+</script>
+
+<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
+<!-- bootstrap 4 js -->
+<script src="/assets/js/popper.min.js"></script>
+<script src="/assets/js/bootstrap.min.js"></script>
+<script src="/assets/js/owl.carousel.min.js"></script>
+<script src="/assets/js/metisMenu.min.js"></script>
+<script src="/assets/js/jquery.slimscroll.min.js"></script>
+<script src="/assets/js/jquery.slicknav.min.js"></script>
+
+<!-- start chart js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+<!-- start highcharts js -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<!-- start zingchart js -->
+<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+<script>
+    zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
+    ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9", "ee6b7db5b51705a13dc2339db3edaf6d"];
+</script>
+<!-- all line chart activation -->
+<script src="/assets/js/line-chart.js"></script>
+<!-- all bar chart activation -->
+<script src="/assets/js/bar-chart.js"></script>
+<!-- all pie chart -->
+<script src="/assets/js/pie-chart.js"></script>
+<!-- others plugins -->
+<script src="/assets/js/plugins.js"></script>
+<script src="/assets/js/scripts.js"></script>
+</body>
+</html>

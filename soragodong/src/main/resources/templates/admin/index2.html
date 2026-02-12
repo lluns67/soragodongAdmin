@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>srtdash - Ecommerce Dashboard</title>
+    <title>소라고동 Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/png" href="/assets/images/icon/favicon.ico">
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
@@ -48,24 +48,31 @@
                     <nav>
                         <ul class="metismenu" id="menu">
                             <li class="active">
-                                <a href="index2.html"><i class="ti-dashboard"></i><span>대시보드</span></a>
+                                <a href="/admin/index2"><i class="ti-dashboard"></i><span>대시보드</span></a>
                             </li>
 
                             <li>
                                 <a href="javascript:void(0)" aria-expanded="true"><i class="ti-user"></i><span>회원 관리</span></a>
                                 <ul class="collapse">
-                                    <li><a href="user-list.html">전체 가입자 목록</a></li>
+                                    <li><a href="user-list">전체 가입자 목록</a></li>
                                     <li><a href="user-banned.html">정지된 유저</a></li>
                                 </ul>
                             </li>
 
                             <li>
-                                <a href="javascript:void(0)" ><i class="ti-layers-alt"></i><span>콘텐츠 관리</span></a>
-
+                                <a href="javascript:void(0)" aria-expanded="true"><i class="ti-layers-alt"></i><span>게시물 관리</span></a>
+                                <ul class="collapse">
+                                    <li><a href="/admin/total-post">전체 게시물</a></li>
+                                    <li><a href="deleted-post.html">삭제된 게시물</a></li>
+                                </ul>
                             </li>
 
                             <li>
-                                <a href="report-list.html"><i class="fa fa-exclamation-triangle"></i><span>신고 처리</span></a>
+                                <a href="javascript:void(0)" aria-expanded="true"><i class="ti-layers-alt"></i><span>신고 처리</span></a>
+                                <ul class="collapse">
+                                    <li><a href="admin/total-report">전체 신고목록</a></li>
+                                    <li><a href="waiting-report.html">처리된 신고목록</a></li>
+                                </ul>
                             </li>
 
                             <li>
@@ -81,7 +88,7 @@
                             </li>
 
                             <li>
-                                <a href="javascript:void(0)" ><i class="ti-timer"></i><span>상점 등록</span></a>
+                                <a href="/admin/store" ><i class="ti-timer"></i><span>상점 등록</span></a>
 
                             </li>
                         </ul>
@@ -131,8 +138,6 @@
                             <img class="avatar user-thumb" src="/assets/images/author/avatar.png" alt="avatar">
                             <h4 class="user-name dropdown-toggle" data-toggle="dropdown">스폰지밥 <i class="fa fa-angle-down"></i></h4>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="#">Message</a>
-                                <a class="dropdown-item" href="#">Settings</a>
                                 <a class="dropdown-item" href="#">Log Out</a>
                             </div>
                         </div>

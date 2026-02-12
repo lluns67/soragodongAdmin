@@ -92,11 +92,12 @@
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body">
-                <h6>신고 내용</h6>
-                <p class="text-muted mb-3" id="modal-report-content">이 게시물은 도배성 게시물입니다...</p>
+                <h6>신고 상세 사유</h6>
+                <div class="p-3 bg-light rounded mt-2" id="modal-report-content">
+                </div>
                 <hr>
-                <h6>처리 선택</h6>
-                <div class="form-group mt-2">
+                <div class="form-group">
+                    <label for="report-action">처리 선택</label>
                     <select class="form-control" id="report-action">
                         <option value="dismiss">반려 (허위 신고)</option>
                         <option value="delete">내용 삭제</option>
@@ -104,8 +105,8 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>관리자 메모</label>
-                    <textarea class="form-control" rows="3" placeholder="처리 사유를 입력하세요."></textarea>
+                    <label for="report-memo">관리자 메모 (사유)</label>
+                    <textarea class="form-control" id="report-memo" rows="3" placeholder="처리 결과를 기록하세요."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -115,6 +116,63 @@
         </div>
     </div>
 </div>
+<script>
+    function openReportModal(reportId) {
+    // 실제 환경에서는 여기서 AJAX를 통해 서버에서 상세 데이터를 가져옵니다.
+    // 현재는 예시를 위해 테이블의 데이터를 활용하거나 가상 데이터를 세팅합니다.
+
+    // 예시 데이터 (나중에 서버 API 연결 시 이 부분을 AJAX 성공 콜백에 넣으세요)
+    const mockData = {
+        id: reportId,
+        type: "게시글",
+        target: "post_123",
+        reason: "부적절한 홍보성 문구",
+        content: "이 사용자는 매크로를 사용하여 1분마다 동일한 광고성 링크를 게시판에 도배하고 있습니다. 커뮤니티 가이드라인 위반입니다.",
+        date: "2026-02-11"
+    };
+
+    // 모달 내 텍스트 변경
+    $('#modal-report-content').text(mockData.content);
+    $('.modal-title').text('신고 상세 내역 - ' + mockData.id);
+
+    // 관리자 메모 칸 비우기
+    $('#report-memo').val('');
+
+    // 모달 표시
+    $('#reportModal').modal('show');
+}
+
+// 2. 처리 적용 버튼 클릭 시 실행
+function submitReportAction() {
+    const action = $('#report-action').val(); // dismiss, delete, ban
+    const memo = $('#report-memo').val();
+
+    if(!memo) {
+        alert("관리자 메모를 입력해주세요.");
+        return;
+    }
+
+    if(confirm("해당 처리를 적용하시겠습니까?")) {
+        // 서버로 처리 결과 전송 (AJAX)
+        console.log("처리 내용:", { action, memo });
+
+        /*
+        $.ajax({
+            url: '/admin/api/report/process',
+            method: 'POST',
+            data: { action: action, memo: memo },
+            success: function() {
+                alert("처리가 완료되었습니다.");
+                location.reload();
+            }
+        });
+        */
+
+        alert("처리가 완료되었습니다. (임시)");
+        $('#reportModal').modal('hide');
+    }
+}
+</script>
 <!-- offset area end -->
 <!-- jquery latest version -->
 <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>

@@ -164,15 +164,21 @@ public class AdminController {
 	
 	// 전체 사용자 조회 화면
 	@GetMapping("user-list")
-	public String userlist(){
+	public String userList(){
 		return "admin/user-list";
 	}
 	
 	
 	// 신고 조회
 	@GetMapping("total-report")
-	public String totalreport(){
+	public String totalReport(){
 		return "admin/total-report";
 	}
+
+    @GetMapping("total-post")
+    public String totalPost(){ return "admin/total-post";}
+
+    @GetMapping("notice-send")
+    public String noticeSend(){ return "admin/notice-send";}
 	
 }

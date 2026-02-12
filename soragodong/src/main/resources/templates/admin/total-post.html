@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="/assets/images/icon/favicon.ico">
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/assets/css/themify-icons.css">
+    <link rel="stylesheet" href="/assets/css/metisMenu.css">
+    <link rel="stylesheet" href="/assets/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="/assets/css/slicknav.min.css">
+    <!-- amchart css -->
+    <link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+    <!-- others css -->
+    <link rel="stylesheet" href="/assets/css/typography.css">
+    <link rel="stylesheet" href="/assets/css/default-css.css">
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="/assets/css/responsive.css">
+    <!-- modernizr css -->
+    <script src="/assets/js/vendor/modernizr-2.8.3.min.js"></script>
+</head>
+<body>
+<div class="main-content-inner">
+    <div class="row">
+        <div class="col-12 mt-5">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="header-title mb-0">전체 게시물 관리</h4>
+                        <a href="/admin/index2" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa fa-home"></i> 대시보드로 돌아가기
+                        </a>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <select class="custom-select" id="post-category-filter">
+                                <option selected>모든 카테고리</option>
+                                <option value="news">소라고동 소식</option>
+                                <option value="market">중고장터</option>
+                                <option value="community">자유게시판</option>
+                            </select>
+                        </div>
+                        <div class="col-md-7">
+                            <input type="text" class="form-control" placeholder="제목, 내용 또는 작성자 검색..." id="post-search">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-block">검색</button>
+                        </div>
+                    </div>
+
+                    <div class="single-table">
+                        <div class="table-responsive">
+                            <table class="table table-hover text-center">
+                                <thead class="text-uppercase bg-light">
+                                <tr>
+                                    <th scope="col">번호</th>
+                                    <th scope="col">카테고리</th>
+                                    <th scope="col">제목</th>
+                                    <th scope="col">작성자</th>
+                                    <th scope="col">작성일</th>
+                                    <th scope="col">조회수</th>
+                                    <th scope="col">추천</th>
+                                    <th scope="col">상태</th>
+                                    <th scope="col">관리</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <th scope="row">1024</th>
+                                    <td>중고장터</td>
+                                    <td class="text-left">
+                                        <a href="javascript:void(0)" onclick="viewPostDetail(1024)" class="text-dark">상태 좋은 파인애플 집 팝니다.</a>
+                                    </td>
+                                    <td>spongebob77</td>
+                                    <td>2026-02-12</td>
+                                    <td>152</td>
+                                    <td>12</td>
+                                    <td><span class="badge badge-primary">게시 중</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-danger" onclick="deletePost(1024)">삭제</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">1023</th>
+                                    <td>자유게시판</td>
+                                    <td class="text-left">
+                                        <a href="javascript:void(0)" class="text-dark">오늘 점심 뭐 먹을까?</a>
+                                    </td>
+                                    <td>patrick_star</td>
+                                    <td>2026-02-12</td>
+                                    <td>45</td>
+                                    <td>2</td>
+                                    <td><span class="badge badge-secondary">삭제됨</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-info" onclick="restorePost(1023)">복구</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // 게시물 삭제 함수
+function deletePost(postId) {
+    if (confirm(postId + "번 게시물을 삭제하시겠습니까? 관련 댓글도 모두 숨김 처리됩니다.")) {
+        console.log(postId + " 삭제 요청 전송");
+        // AJAX 로직 추가 예정
+        alert("삭제 처리가 완료되었습니다.");
+        location.reload();
+    }
+}
+
+// 게시물 상세 보기 (모달 또는 페이지 이동)
+function viewPostDetail(postId) {
+    // 상세 내용을 보여주는 모달을 띄우거나 이동 로직
+    // 예: $('#postDetailModal').modal('show');
+    alert(postId + "번 게시물의 상세 내용을 불러옵니다.");
+}
+
+// 게시물 복구 함수
+function restorePost(postId) {
+    if (confirm("삭제된 " + postId + "번 게시물을 다시 복구하시겠습니까?")) {
+        alert("복구 처리가 완료되었습니다.");
+        location.reload();
+    }
+}
+</script>
+<!-- offset area end -->
+<!-- jquery latest version -->
+    <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
+    <!-- bootstrap 4 js -->
+    <script src="/assets/js/popper.min.js"></script>
+    <script src="/assets/js/bootstrap.min.js"></script>
+    <script src="/assets/js/owl.carousel.min.js"></script>
+    <script src="/assets/js/metisMenu.min.js"></script>
+    <script src="/assets/js/jquery.slimscroll.min.js"></script>
+    <script src="/assets/js/jquery.slicknav.min.js"></script>
+
+    <!-- start chart js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+    <!-- start highcharts js -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <!-- start zingchart js -->
+    <script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+    <script>
+        zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
+        ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9", "ee6b7db5b51705a13dc2339db3edaf6d"];
+    </script>
+    <!-- all line chart activation -->
+    <script src="/assets/js/line-chart.js"></script>
+    <!-- all bar chart activation -->
+    <script src="/assets/js/bar-chart.js"></script>
+    <!-- all pie chart -->
+    <script src="/assets/js/pie-chart.js"></script>
+    <!-- others plugins -->
+    <script src="/assets/js/plugins.js"></script>
+    <script src="/assets/js/scripts.js"></script>
+</body>
+</html>

@@ -168,17 +168,38 @@ public class AdminController {
 		return "admin/user-list";
 	}
 	
+	@GetMapping("user-banned")
+	public String bannedUser(){
+		return "admin/user-banned";
+	}
+	
 	
 	// 신고 조회
 	@GetMapping("total-report")
 	public String totalReport(){
 		return "admin/total-report";
 	}
+	// 신고 처리
+	@GetMapping("waiting-report")
+	public String waitingReport(){
+		return "admin/waiting-report";
+	}
 
     @GetMapping("total-post")
     public String totalPost(){ return "admin/total-post";}
-
+	
+	@GetMapping("deleted-post")
+	public String deletePost(){ return  "admin/deleted-post";}
+	
+	
+	// 공지 보내기
     @GetMapping("notice-send")
     public String noticeSend(){ return "admin/notice-send";}
 	
+	@GetMapping("push-history")
+	public String pushHistory(){ return "admin/push-history";}
+	
+	
+	@GetMapping("monitoring")
+	public String monitoring() {return "admin/monitoring";}
 }

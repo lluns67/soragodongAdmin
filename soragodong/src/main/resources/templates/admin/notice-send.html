@@ -40,39 +40,14 @@
                             <input class="form-control" type="text" id="notice-title" placeholder="공지사항 제목을 입력하세요 (예: [공지] 서버 점검 안내)">
                         </div>
 
-                        <div class="form-group">
-                            <label class="col-form-label">발송 대상</label>
-                            <div class="d-flex">
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="target-all" name="notice-target" class="custom-control-input" checked>
-                                    <label class="custom-control-input" for="target-all">전체 사용자</label>
-                                </div>
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="target-owner" name="notice-target" class="custom-control-input">
-                                    <label class="custom-control-input" for="target-owner">점주만</label>
-                                </div>
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="target-user" name="notice-target" class="custom-control-input">
-                                    <label class="custom-control-input" for="target-user">일반 유저만</label>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <div class="form-group">
                             <label for="notice-content" class="col-form-label">공지 내용</label>
                             <textarea class="form-control" id="notice-content" rows="10" placeholder="상세한 공지 내용을 작성하세요."></textarea>
                         </div>
 
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox custom-control-inline">
-                                <input type="checkbox" class="custom-control-input" id="send-push" checked>
-                                <label class="custom-control-input" for="send-push">푸시 알림 발송</label>
-                            </div>
-                            <div class="custom-control custom-checkbox custom-control-inline">
-                                <input type="checkbox" class="custom-control-input" id="send-popup">
-                                <label class="custom-control-input" for="send-popup">메인 팝업 노출</label>
-                            </div>
-                        </div>
+
 
                         <div class="text-right mt-4">
                             <button type="button" class="btn btn-secondary mr-2" onclick="previewNotice()">미리보기</button>
@@ -89,7 +64,6 @@
 function sendNotice() {
     const title = $('#notice-title').val();
     const content = $('#notice-content').val();
-    const target = $('input[name="notice-target"]:checked').next('label').text();
 
     if (!title || !content) {
         alert("제목과 내용을 모두 입력해 주세요.");
@@ -101,8 +75,8 @@ function sendNotice() {
         console.log("발송 데이터:", {
             title: title,
             content: content,
-            push: $('#send-push').is(':checked'),
-            popup: $('#send-popup').is(':checked')
+
+
         });
 
         alert("공지가 성공적으로 발송되었습니다.");

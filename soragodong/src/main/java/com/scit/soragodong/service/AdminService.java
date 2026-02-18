@@ -3,9 +3,11 @@ package com.scit.soragodong.service;
 import com.scit.soragodong.domain.dto.AdminPostDto;
 import com.scit.soragodong.domain.dto.BoardDto;
 import com.scit.soragodong.domain.dto.UsedDto;
+import com.scit.soragodong.domain.entity.Admin;
 import com.scit.soragodong.domain.entity.Board;
 import com.scit.soragodong.domain.entity.Used;
 import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.repository.AdminRepository;
 import com.scit.soragodong.repository.BoardRepository;
 import com.scit.soragodong.repository.UsedRepository;
 import com.scit.soragodong.repository.UserRepository;
@@ -24,6 +26,23 @@ public class AdminService {
     private final BoardRepository boardRepository;
     private final UsedRepository usedRepository;
     private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
+
+
+    @Transactional
+    public Admin login(String adminId, String password) {
+        // 1. 아이디 조회
+        Admin admin = adminRepository.findByAdminId(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 관리자 계정입니다."));
+
+        // 2. 비밀번호 비교 (실제 서비스에서는 PasswordEncoder 사용 권장)
+        if (!admin.getAdminPassword().equals(password)) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        return admin;
+    }
+
 
     public List<AdminPostDto> getUserTotalPosts(Integer userIdx) {
         // 1. 유저 닉네임 확보

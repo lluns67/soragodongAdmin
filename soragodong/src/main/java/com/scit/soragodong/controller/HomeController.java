@@ -10,5 +10,10 @@ public class HomeController {
 	public String landingPage() {
 		return "index";
 	}
-	
+
+    @GetMapping("/login")
+    public String login(){ return "login";}
+
+    @GetMapping("/owner/dashboard")
+    public String dashboard(){ return  "owner/dashboard"; }
 }

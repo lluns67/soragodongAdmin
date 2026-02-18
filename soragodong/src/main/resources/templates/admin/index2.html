@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" xmlns:th="thymeleaf.org">
 
 <head>
     <meta charset="utf-8">
@@ -91,6 +91,10 @@
                                 <a href="/admin/store" ><i class="ti-timer"></i><span>상점 등록</span></a>
 
                             </li>
+                            <li>
+                                <a href="/admin/addAdmin" ><i class="ti-timer"></i><span>어드민 생성</span></a>
+
+                            </li>
                         </ul>
                     </nav>
                 </div>
@@ -136,9 +140,9 @@
                     <div class="col-sm-6 clearfix">
                         <div class="user-profile pull-right">
                             <img class="avatar user-thumb" src="/assets/images/author/avatar.png" alt="avatar">
-                            <h4 class="user-name dropdown-toggle" data-toggle="dropdown">스폰지밥 <i class="fa fa-angle-down"></i></h4>
+                            <h4 class="user-name dropdown-toggle" data-toggle="dropdown"><span th:text="${#authentication.name}">관리자ID</span> <i class="fa fa-angle-down"></i></h4>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="#">Log Out</a>
+                                <a href="/logout"><i class="ti-power-off"></i><span>로그아웃</span></a>
                             </div>
                         </div>
                     </div>

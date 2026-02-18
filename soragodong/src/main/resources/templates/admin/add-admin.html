@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="main-content-inner">
+    <div class="row">
+        <div class="col-lg-6 col-ml-12 mt-5">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="header-title">관리자 계정 생성</h4>
+                    <form th:action="@{/admin/addAdmin}" method="post">
+                        <div class="form-group">
+                            <label for="adminId" class="col-form-label">관리자 ID</label>
+                            <input class="form-control" type="text" id="adminId" name="adminId" required placeholder="접속 ID를 입력하세요">
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword" class="col-form-label">비밀번호</label>
+                            <input class="form-control" type="password" id="adminPassword" name="adminPassword" required placeholder="비밀번호를 입력하세요">
+                        </div>
+                        <div class="form-group">
+                            <label class="col-form-label">권한 설정 (Role)</label>
+                            <select class="custom-select" name="role">
+                                <option value="ADMIN" selected>ADMIN (전체 관리자)</option>
+                                <option value="OWNER">OWNER (상점 관리자)</option>
+                            </select>
+                        </div>
+                        <div class="submit-btn-area mt-4">
+                            <button class="btn btn-primary" type="submit">계정 생성하기</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

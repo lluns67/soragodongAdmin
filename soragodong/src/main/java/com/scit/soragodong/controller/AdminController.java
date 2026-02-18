@@ -1,7 +1,9 @@
 package com.scit.soragodong.controller;
 
 import com.scit.soragodong.domain.dto.*;
+import com.scit.soragodong.domain.entity.Admin;
 import com.scit.soragodong.exception.ErrorCode;
+import com.scit.soragodong.repository.AdminRepository;
 import com.scit.soragodong.service.AdminService;
 import com.scit.soragodong.service.AdminStoreService;
 import com.scit.soragodong.service.TimesaleService;
@@ -10,10 +12,12 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +38,9 @@ public class AdminController {
 	private final AdminStoreService adminStoreService;
     private final UserService userService;
     private final AdminService adminService;
-	
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final AdminRepository adminRepository;
+
     @GetMapping("store")
     public String store(@RequestParam(value = "path", required = false, defaultValue = "전체지역") String path
             ,@RequestParam(value = "storeIdx", required = false) Integer storeIdx
@@ -252,4 +258,27 @@ public class AdminController {
 	
 	@GetMapping("monitoring")
 	public String monitoring() {return "admin/monitoring";}
+
+    @GetMapping("addAdmin")
+    public String addAdminPage() {
+        return "admin/add-admin";
+    }
+
+    // 어드민 계정 생성 처리
+    @PostMapping("addAdmin")
+    public String addAdmin(@ModelAttribute Admin admin, RedirectAttributes rttr) {
+        try {
+            // 비밀번호 암호화 필수!
+            admin.setAdminPassword(bCryptPasswordEncoder.encode(admin.getAdminPassword()));
+
+            // DB 저장
+            adminRepository.save(admin);
+
+            rttr.addFlashAttribute("message", "새로운 관리자 계정이 생성되었습니다.");
+            return "redirect:/admin/index2"; // 생성 후 유저 목록으로 이동
+        } catch (Exception e) {
+            rttr.addFlashAttribute("error", "이미 존재하는 ID이거나 오류가 발생했습니다.");
+            return "redirect:/admin/addAdmin";
+        }
+    }
 }

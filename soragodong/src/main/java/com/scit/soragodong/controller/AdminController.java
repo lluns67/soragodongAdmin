@@ -150,8 +150,8 @@ public class AdminController {
     // 수정
     @PatchMapping("api/store/{idx}")
     @ResponseBody
-    public ResponseEntity<?> updateStore(@PathVariable int idx, StoreDto dto, @RequestParam(required = false) MultipartFile uploadFile) {
-        timeSaleService.updateStore(idx, dto, uploadFile);
+    public ResponseEntity<?> updateStore(StoreDto dto, @RequestParam(required = false) List<MultipartFile> uploadFile) {
+        timeSaleService.updateStore(dto, uploadFile);
         return ResponseEntity.ok().build();
     }
 

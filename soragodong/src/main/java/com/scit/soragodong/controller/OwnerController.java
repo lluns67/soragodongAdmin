@@ -1,5 +1,6 @@
 package com.scit.soragodong.controller;
 
+import com.scit.soragodong.domain.dto.StoreDto;
 import com.scit.soragodong.domain.dto.StoreProductDto;
 import com.scit.soragodong.domain.entity.Admin;
 import com.scit.soragodong.domain.entity.Store;
@@ -89,6 +90,19 @@ public class OwnerController {
             rttr.addFlashAttribute("message", "상품 정보가 성공적으로 수정되었습니다.");
         } catch (Exception e) {
             rttr.addFlashAttribute("error", "수정 중 오류 발생: " + e.getMessage());
+        }
+        return "redirect:/owner/dashboard";
+    }
+
+    @PostMapping("/store/edit")
+    public String updateStore(@ModelAttribute StoreDto storeDto,
+                              @RequestParam(value = "storeFile", required = false) List<MultipartFile> files,
+                              RedirectAttributes rttr) {
+        try {
+            timesaleService.updateStore(storeDto, files);
+            rttr.addFlashAttribute("message", "상점 정보가 업데이트되었습니다.");
+        } catch (Exception e) {
+            rttr.addFlashAttribute("error", "업데이트 실패: " + e.getMessage());
         }
         return "redirect:/owner/dashboard";
     }

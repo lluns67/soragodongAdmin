@@ -42,8 +42,12 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="header-title mb-0">내 점포: <span th:text="${store.storeName}" class="text-primary">가게이름</span></h4>
-                        <button class="btn btn-rounded btn-outline-info btn-sm"
-                                th:onclick="|location.href='/owner/store/edit/' + ${store.storeIdx}|">정보 수정</button>
+                        <button type="button"
+                                class="btn btn-rounded btn-outline-info btn-sm"
+                                data-toggle="modal"
+                                data-target="#editStoreModal">
+                            정보 수정
+                        </button>
                     </div>
                     <div class="row">
                         <div class="col-md-3">
@@ -247,6 +251,74 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
                     <button type="submit" class="btn btn-success">수정 완료</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="editStoreModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">상점 및 이벤트 설정 수정</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <form th:action="@{/owner/store/edit}" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="storeIdx" th:value="${store.storeIdx}">
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>상점명</label>
+                            <input type="text" name="storeName" class="form-control" th:value="${store.storeName}" readonly>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>상점 주소</label>
+                            <input type="text" name="storeAddress" class="form-control" th:value="${store.storeAddress}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>영업 시작</label>
+                            <input type="time" name="storeOpenTime" class="form-control" th:value="${store.storeOpenTime}">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>영업 종료</label>
+                            <input type="time" name="storeCloseTime" class="form-control" th:value="${store.storeCloseTime}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-6 form-group">
+                            <label>이벤트 시작 시간</label>
+                            <input type="time" name="eventStartTime" class="form-control"
+                                   th:value="${store.eventStartTime}">
+                            <small class="text-muted">할인 혜택이 시작되는 시간입니다.</small>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label>이벤트 종료 시간</label>
+                            <input type="time" name="eventEndTime" class="form-control"
+                                   th:value="${store.eventEndTime}">
+                            <small class="text-muted">할인 혜택이 종료되는 시간입니다.</small>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="mb-3 text-primary">SORA AI 이벤트 설정</h6>
+
+                    <div class="form-group">
+                        <label>SORA 브리핑 메시지 (eventNote)</label>
+                        <textarea name="eventNote" class="form-control" rows="3" th:text="${store.eventNote}" placeholder="AI가 사용자에게 읽어줄 공지 내용을 적어주세요."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>상점 대표 사진</label>
+                        <input type="file" name="storeFile" class="form-control-file">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-primary">변경사항 저장</button>
                 </div>
             </form>
         </div>

@@ -1,9 +1,11 @@
 package com.scit.soragodong.service;
 
+import com.scit.soragodong.domain.dto.FileRes;
 import com.scit.soragodong.domain.dto.StoreDto;
 import com.scit.soragodong.domain.dto.StoreProductDto;
 import com.scit.soragodong.domain.entity.Store;
 import com.scit.soragodong.domain.entity.StoreProduct;
+import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.repository.StoreProductRepository;
 import com.scit.soragodong.repository.StoreRepository;
 import com.scit.soragodong.util.FileUploadUtil;
@@ -23,7 +25,7 @@ public class TimesaleService {
 
     private final StoreProductRepository storeProductRepository;
     private final StoreRepository storeRepository;
-
+    private final FileService fileService;
 
     /**
      * 모든 상품(음식) 데이터 조회
@@ -72,7 +74,7 @@ public class TimesaleService {
      * 사용 중인 가게만 조회 (isUse = 1)
      */
     public List<StoreDto> getActiveStores() {
-        List<Store> stores = storeRepository.findByIsUse(1);
+        List<Store> stores = storeRepository.findByIsUse((byte) 1);
         
         return stores.stream()
                 .map(this::convertToDto)
@@ -162,7 +164,7 @@ public class TimesaleService {
         storeRepository.save(store);
     }
 
-    public void insertProduct(StoreProductDto productDto) {
+    public void insertProduct(StoreProductDto productDto, List<MultipartFile> files) {
         // 1. 먼저 해당 storeIdx를 가진 Store 엔티티를 찾습니다.
         Store store = storeRepository.findById(productDto.storeIdx())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 점포입니다."));
@@ -171,13 +173,61 @@ public class TimesaleService {
                 .productNum(productDto.productNum())
                 .productName(productDto.productName())
                 .productQuantity(productDto.productQuantity())
-                .productPictureIdx(productDto.productPictureIdx())
+
                 .price(productDto.price())
                 .eventPrice(productDto.eventPrice())
                 .category(productDto.category())
                 .store(store)
                 .build();
         storeProductRepository.save(storeProduct);
+
+        if (files != null && !files.isEmpty() && !files.get(0).isEmpty()) {
+            // fileService.upload는 List<FileRes>를 반환합니다.
+            List<FileRes> uploadedFiles = fileService.upload(
+                    FileRefType.PRODUCT,
+                    storeProduct.getProductNum(),
+                    files
+            );
+            // 4. 업로드된 파일 중 첫 번째 파일의 경로를 상품의 대표 이미지(productPictureIdx)로 설정
+            if (!uploadedFiles.isEmpty()) {
+                // FileRes record의 fileUrl(상대경로)을 가져와 업데이트
+                String representativeImage = uploadedFiles.get(0).fileUrl();
+                storeProduct.setProductPictureIdx(representativeImage);
+
+                // JPA의 더티 체킹(Dirty Checking)으로 인해 명시적 save 없이도 트랜잭션 종료 시 업데이트됩니다.
+                // 혹은 확실하게 하기 위해 한 번 더 호출 가능
+                // storeProductRepository.save(storeProduct);
+            }
+        }
+    }
+
+    @Transactional
+    public void updateProduct(StoreProductDto productDto, List<MultipartFile> files) {
+        // 1. 기존 상품 조회
+        StoreProduct product = storeProductRepository.findById(productDto.productNum())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
+
+        // 2. 기본 정보 업데이트
+        product.setProductName(productDto.productName());
+        product.setPrice(productDto.price());
+        product.setEventPrice(productDto.eventPrice());
+        product.setProductQuantity(productDto.productQuantity());
+        product.setCategory(productDto.category());
+
+        // 3. 새 파일이 올라왔을 경우 처리
+        if (files != null && !files.isEmpty() && !files.get(0).isEmpty()) {
+            // 기존 파일 관리 로직(필요시 기존 파일 isUse = false 처리)
+            List<FileRes> uploadedFiles = fileService.upload(
+                    FileRefType.PRODUCT,
+                    product.getProductNum(),
+                    files
+            );
+
+            // 대표 이미지 업데이트
+            if (!uploadedFiles.isEmpty()) {
+                product.setProductPictureIdx(uploadedFiles.get(0).fileUrl());
+            }
+        }
     }
 
     public void updateStore(int idx, StoreDto dto, MultipartFile uploadFile) {

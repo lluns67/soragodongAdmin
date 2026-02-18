@@ -171,6 +171,22 @@ public class AdminController {
         model.addAttribute("userList", users);
 		return "admin/user-list";
 	}
+    // 1. 상태 변경 API
+    @PostMapping("/api/users/toggle-status")
+    @ResponseBody
+    public ResponseEntity<String> toggleStatus(@RequestParam("userIdx") Integer userIdx) {
+        userService.updateUserStatus(userIdx); // AdminService에서 작성한 토글 로직 호출
+        return ResponseEntity.ok("success");
+    }
+
+    // 2. 경고 횟수 수정 API
+    @PatchMapping("/api/users/{userIdx}/warning")
+    @ResponseBody
+    public ResponseEntity<Void> updateWarning(@PathVariable Integer userIdx, @RequestParam Integer count) {
+        // userRepository 등을 통해 직접 해당 유저의 warningCount 업데이트
+        userService.updateWarningCount(userIdx, count);
+        return ResponseEntity.ok().build();
+    }
 	
 	@GetMapping("user-banned")
 	public String bannedUser(){

@@ -46,4 +46,10 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다. IDX: " + userIdx));
         user.setIsUse(!user.getIsUse()); // true -> false, false -> true
     }
+
+    public void updateWarningCount(Integer userIdx, Integer count) {
+        Users user = userRepository.findById(userIdx)
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다. IDX: " + userIdx));
+        user.setWarningCount(count);
+    }
 }

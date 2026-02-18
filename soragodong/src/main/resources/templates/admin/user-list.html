@@ -80,10 +80,12 @@
                                     <td>
                                         <ul class="d-flex justify-content-center">
                                             <li class="mr-3">
-                                                <button class="btn btn-xs btn-outline-secondary" th:onclick="'editUser(' + ${user.userIdx} + ')'">수정</button>
+                                                <button class="btn btn-xs btn-outline-secondary"
+                                                        th:onclick="editUser([[${user.userIdx}]], this)">수정</button>
                                             </li>
                                             <li>
-                                                <button class="btn btn-xs btn-danger" th:onclick="'toggleStatus(' + ${user.userIdx} + ')'">상태변경</button>
+                                                <button class="btn btn-xs btn-danger"
+                                                        th:onclick="toggleStatus([[${user.userIdx}]])">상태변경</button>
                                             </li>
                                         </ul>
                                     </td>
@@ -101,18 +103,62 @@
 <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
 <script src="/assets/js/bootstrap.min.js"></script>
 <script>
-    function editUser(idx) {
-        // 유저 정보 수정 모달 오픈 또는 페이지 이동
-        location.href = '/admin/user/edit/' + idx;
-    }
+    $(document).ready(function() {
+      // 1. 수정 버튼: 경고 횟수 입력창으로 전환
+      window.editUser = function(idx, btn) {
+          const row = $(btn).closest('tr');
+          const warningCell = row.find('.text-danger.font-weight-bold').parent();
+          const currentCount = warningCell.find('span').text();
 
-    function toggleStatus(idx) {
-        if(confirm(idx + "번 사용자의 활성/정지 상태를 변경하시겠습니까?")) {
-            // AJAX 통신으로 DB의 isUse 값 토글 처리
-            alert("상태가 변경되었습니다.");
-            location.reload();
-        }
-    }
+          // 이미 입력창인 경우 중복 방지
+          if (warningCell.find('input').length > 0) return;
+
+          const inputHtml = `
+              <input type="number" class="form-control form-control-sm d-inline-block text-center"
+                     style="width: 50px;" value="${currentCount}"
+                     onblur="saveWarningCount(${idx}, this)"> 회`;
+
+          warningCell.html(inputHtml);
+          warningCell.find('input').focus();
+      };
+
+      // 1-2. 경고 횟수 서버 저장 (포커스 아웃 시)
+      window.saveWarningCount = function(idx, input) {
+          const newVal = $(input).val();
+          const warningCell = $(input).parent();
+
+          $.ajax({
+              url: '/admin/api/users/' + idx + '/warning',
+              method: 'PATCH',
+              data: { count: newVal },
+              success: function() {
+                  warningCell.html(`<span class="text-danger font-weight-bold">${newVal}</span>회`);
+              },
+              error: function() {
+                  alert("수정에 실패했습니다.");
+                  location.reload();
+              }
+          });
+      };
+
+      // 2. 상태변경 버튼: 활성/정지 토글
+      window.toggleStatus = function(idx) {
+          if(confirm(idx + "번 사용자의 활성/정지 상태를 변경하시겠습니까?")) {
+              $.ajax({
+                  url: '/admin/api/users/toggle-status',
+                  method: 'POST',
+                  data: { userIdx: idx },
+                  success: function(res) {
+                      alert("상태가 변경되었습니다.");
+                      location.reload();
+                  },
+                  error: function(err) {
+                      alert("처리 중 오류가 발생했습니다.");
+                  }
+              });
+          }
+      };
+  });
 </script>
 </body>
 </html>

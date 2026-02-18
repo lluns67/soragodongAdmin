@@ -190,7 +190,17 @@ public class AdminController {
     }
 	
 	@GetMapping("user-banned")
-	public String bannedUser(){
+	public String bannedUser(Model model){
+// 1. 전체 사용자 가져오기
+        List<UserDto> allUsers = userService.findAllUsers();
+
+        // 2. 그 중 정지된 사용자(isUse == false)만 필터링
+        List<UserDto> suspendedUsers = allUsers.stream()
+                .filter(user -> !user.getIsUse()) // UserDto의 isUse 필드가 false인 경우
+                .toList();
+
+        // 3. 모델에 담기 (타임리프에서 사용할 이름: userList)
+        model.addAttribute("userList", suspendedUsers);
 
         return "admin/user-banned";
 	}

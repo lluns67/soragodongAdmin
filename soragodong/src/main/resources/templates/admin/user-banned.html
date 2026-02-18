@@ -38,57 +38,45 @@
         <div class="col-12 mt-5">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="header-title">정지 회원 목록</h4>
-
+                    <h4 class="header-title">정지 회원 관리 내역</h4>
                     <div class="single-table">
                         <div class="table-responsive">
                             <table class="table table-hover text-center">
                                 <thead class="text-uppercase bg-light">
                                 <tr>
-                                    <th scope="col">번호</th>
-                                    <th scope="col">아이디</th>
-                                    <th scope="col">이름</th>
-                                    <th scope="col">정지 일자</th>
-                                    <th scope="col">정지 사유</th>
-                                    <th scope="col">상태</th>
-                                    <th scope="col">관리</th>
+                                    <th>IDX</th>
+                                    <th>이메일</th>
+                                    <th>이름(닉네임)</th>
+                                    <th>경고 횟수</th>
+                                    <th>상태</th>
+                                    <th>관리</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
-                                    <th scope="row">1</th>
-                                    <td>bad_user_01</td>
-                                    <td>도둑놈</td>
-                                    <td>2026-02-10</td>
-                                    <td class="text-danger">상습적 허위 매물 등록</td>
-                                    <td><span class="badge badge-danger">정지</span></td>
+                                <tr th:each="user : ${userList}">
+                                    <td th:text="${user.userIdx}">1</td>
+                                    <td th:text="${user.userEmail}">test@test.com</td>
                                     <td>
-                                        <button class="btn btn-xs btn-success" onclick="unbanUser('bad_user_01')">정지 해제</button>
+                                        <span th:text="${user.userName}">이름</span>
+                                        (<small th:text="${user.userNickname}">닉네임</small>)
+                                    </td>
+                                    <td>
+                                        <span class="text-danger font-weight-bold" th:text="${user.warningCount}">0</span>회
+                                    </td>
+                                    <td><span class="badge badge-danger">정지됨</span></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-outline-success"
+                                                th:onclick="|restoreUser(${user.userIdx})|">
+                                            <i class="fa fa-unlock"></i> 정지 해제
+                                        </button>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <th scope="row">2</th>
-                                    <td>spam_master</td>
-                                    <td>광고쟁이</td>
-                                    <td>2026-02-12</td>
-                                    <td class="text-danger">욕설 및 스팸 게시글 도배</td>
-                                    <td><span class="badge badge-danger">정지</span></td>
-                                    <td>
-                                        <button class="btn btn-xs btn-success" onclick="unbanUser('spam_master')">정지 해제</button>
-                                    </td>
+                                <tr th:if="${#lists.isEmpty(userList)}">
+                                    <td colspan="6" class="p-5">정지된 사용자가 없습니다.</td>
                                 </tr>
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-
-                    <div class="pagination_area pull-right mt-5">
-                        <ul>
-                            <li><a href="#"><i class="fa fa-chevron-left"></i></a></li>
-                            <li class="active"><a href="#">1</a></li>
-                            <li><a href="#">2</a></li>
-                            <li><a href="#"><i class="fa fa-chevron-right"></i></a></li>
-                        </ul>
                     </div>
                 </div>
             </div>
@@ -96,17 +84,27 @@
     </div>
 </div>
 
-<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
-<script src="/assets/js/bootstrap.min.js"></script>
 <script>
-    function unbanUser(userId) {
-        if (confirm(`${userId} 회원의 정지를 해제하고 활성 상태로 변경하시겠습니까?`)) {
-            // 서버 AJAX 통신 로직 (회원 상태를 'active'로 변경)
-            console.log(userId + " 정지 해제 처리");
-            alert("해당 회원의 정지가 해제되었습니다.");
-            location.reload();
+    function restoreUser(userIdx) {
+        if(confirm(userIdx + "번 회원의 정지를 해제하시겠습니까?")) {
+            $.ajax({
+                url: '/admin/api/users/toggle-status',
+                method: 'POST',
+                data: { userIdx: userIdx },
+                success: function() {
+                    alert("정지가 해제되어 일반 회원으로 복구되었습니다.");
+                    location.reload();
+                },
+                error: function() {
+                    alert("처리 중 오류가 발생했습니다.");
+                }
+            });
         }
     }
 </script>
+
+<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
+<script src="/assets/js/bootstrap.min.js"></script>
+
 </body>
 </html>

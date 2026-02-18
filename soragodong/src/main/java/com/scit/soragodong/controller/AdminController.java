@@ -1,11 +1,11 @@
 package com.scit.soragodong.controller;
 
-import com.scit.soragodong.domain.dto.OwnerStoreDto;
-import com.scit.soragodong.domain.dto.StoreDto;
-import com.scit.soragodong.domain.dto.StoreProductDto;
+import com.scit.soragodong.domain.dto.*;
 import com.scit.soragodong.exception.ErrorCode;
+import com.scit.soragodong.service.AdminService;
 import com.scit.soragodong.service.AdminStoreService;
 import com.scit.soragodong.service.TimesaleService;
+import com.scit.soragodong.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +31,8 @@ public class AdminController {
 
     private final TimesaleService timeSaleService;
 	private final AdminStoreService adminStoreService;
+    private final UserService userService;
+    private final AdminService adminService;
 	
     @GetMapping("store")
     public String store(@RequestParam(value = "path", required = false, defaultValue = "전체지역") String path
@@ -164,13 +166,16 @@ public class AdminController {
 	
 	// 전체 사용자 조회 화면
 	@GetMapping("user-list")
-	public String userList(){
+	public String userList(Model model) {
+        List<UserDto> users = userService.findAllUsers();
+        model.addAttribute("userList", users);
 		return "admin/user-list";
 	}
 	
 	@GetMapping("user-banned")
 	public String bannedUser(){
-		return "admin/user-banned";
+
+        return "admin/user-banned";
 	}
 	
 	
@@ -186,8 +191,19 @@ public class AdminController {
 	}
 
     @GetMapping("total-post")
-    public String totalPost(){ return "admin/total-post";}
-	
+    public String totalPost(@RequestParam(value = "userIdx", required = false) Integer userIdx, Model model) {
+        List<AdminPostDto> posts;
+        if (userIdx != null) {
+            // 특정 유저의 게시물만 조회
+            posts = adminService.getUserTotalPosts(userIdx);
+        } else {
+            // 전체 게시물 조회
+            posts = adminService.findAllPosts();
+        }
+        model.addAttribute("postList", posts);
+        return "admin/total-post";}
+
+
 	@GetMapping("deleted-post")
 	public String deletePost(){ return  "admin/deleted-post";}
 	

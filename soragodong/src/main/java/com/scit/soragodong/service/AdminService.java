@@ -1,0 +1,203 @@
+package com.scit.soragodong.service;
+
+import com.scit.soragodong.domain.dto.AdminPostDto;
+import com.scit.soragodong.domain.dto.BoardDto;
+import com.scit.soragodong.domain.dto.UsedDto;
+import com.scit.soragodong.domain.entity.Board;
+import com.scit.soragodong.domain.entity.Used;
+import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.repository.BoardRepository;
+import com.scit.soragodong.repository.UsedRepository;
+import com.scit.soragodong.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class AdminService {
+    private final BoardRepository boardRepository;
+    private final UsedRepository usedRepository;
+    private final UserRepository userRepository;
+
+    public List<AdminPostDto> getUserTotalPosts(Integer userIdx) {
+        // 1. 유저 닉네임 확보
+        String nickname = userRepository.findById(userIdx)
+                .map(Users::getUserNickname)
+                .orElse("알 수 없음");
+
+        // 2. 커뮤니티 글 조회 -> BoardDto -> AdminPostDto
+        List<AdminPostDto> boardList = boardRepository.findByUser_UserIdx(userIdx).stream()
+                .map(entity -> BoardDto.builder()
+                        .boardIdx(entity.getBoardIdx())
+                        .userIdx(entity.getUser().getUserIdx())
+
+                        .boardCategory(entity.getBoardCategory())
+                        .boardTitle(entity.getBoardTitle())
+                        .boardContent(entity.getBoardContent())
+                        .userNickname(entity.getUser().getUserNickname())
+                        .isUse(entity.getIsUse())
+
+                        .likeCount(entity.getLikeCount())
+                        .viewCount(entity.getViewCount())
+                        .createdAt(entity.getCreateDate())
+
+
+
+                        .build())
+                .map(AdminPostDto::fromBoard)
+                .toList();
+
+        // 3. 중고거래 글 조회 -> UsedDto -> AdminPostDto
+        List<AdminPostDto> usedList = usedRepository.findByUser_UserIdx(userIdx).stream()
+                .map(entity -> new UsedDto(
+                        entity.getUsedIdx(),
+                        entity.getUsedTitle(),
+                        entity.getUsedContent(),
+                        entity.getUsedPrice(),
+                        entity.getUsedState(),
+                        entity.getTradingLoc(),
+                        entity.getViewCount(),
+                        entity.getCreatedAt(),
+                        entity.getUpdatedAt(),
+                        entity.getIsUse(),
+                        entity.getUser().getUserIdx()
+                ))
+                .map(u -> AdminPostDto.fromUsed(u, nickname))
+                .toList();
+
+
+        // 4. 통합 및 정렬
+        List<AdminPostDto> combined = new ArrayList<>();
+        combined.addAll(boardList);
+        combined.addAll(usedList);
+
+        return combined.stream()
+                .sorted(Comparator.comparing(AdminPostDto::getDate,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .collect(Collectors.toList());
+    }
+
+    public List<AdminPostDto> findAllPosts() {
+        // 1. Board 전체 조회 -> BoardDto -> AdminPostDto
+        List<AdminPostDto> boardList = boardRepository.findAll().stream()
+                .map(entity -> BoardDto.builder()
+                        .boardIdx(entity.getBoardIdx())
+                        .userIdx(entity.getUser().getUserIdx())
+                        .boardCategory(entity.getBoardCategory())
+                        .boardTitle(entity.getBoardTitle())
+                        .boardContent(entity.getBoardContent())
+                        .userNickname(entity.getUser().getUserNickname())
+                        .isUse(entity.getIsUse())
+                        .likeCount(entity.getLikeCount())
+                        .viewCount(entity.getViewCount())
+                        .createdAt(entity.getCreateDate())
+                        .build())
+                .map(AdminPostDto::fromBoard)
+                .toList();
+
+        // 2. Used 전체 조회 -> UsedDto -> AdminPostDto
+        List<AdminPostDto> usedList = usedRepository.findAll().stream()
+                .map(entity -> new UsedDto(
+                        entity.getUsedIdx(),
+                        entity.getUsedTitle(),
+                        entity.getUsedContent(),
+                        entity.getUsedPrice(),
+                        entity.getUsedState(),
+                        entity.getTradingLoc(),
+                        entity.getViewCount(),
+                        entity.getCreatedAt(),
+                        entity.getUpdatedAt(),
+                        entity.getIsUse(),
+                        entity.getUser().getUserIdx()
+                ))
+                .map(u -> AdminPostDto.fromUsed(u, u.userIdx() != null
+                        ? userRepository.findById(u.userIdx())
+                        .map(Users::getUserNickname)
+                        .orElse("알 수 없음")
+                        : "알 수 없음"))
+                .toList();
+
+        // 3. 통합 및 정렬
+        List<AdminPostDto> combined = new ArrayList<>();
+        combined.addAll(boardList);
+        combined.addAll(usedList);
+
+        return combined.stream()
+                .sorted(Comparator.comparing(AdminPostDto::getDate,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updatePostStatus(Integer idx, String type) {
+        if ("커뮤니티".equals(type)) {
+            Board board = boardRepository.findById(idx)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 커뮤니티 게시글입니다."));
+            // 상태 반전 (true -> false, false -> true)
+            board.setIsUse(!board.getIsUse());
+        } else if ("중고거래".equals(type)) {
+            Used used = usedRepository.findById(idx)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 중고거래 게시글입니다."));
+            used.setIsUse(!used.getIsUse());
+        } else {
+            throw new IllegalArgumentException("잘못된 게시글 유형입니다.");
+        }
+    }
+
+    @Transactional
+    public AdminPostDto getPostDetail(Integer idx, String type) {
+        if ("커뮤니티".equals(type)) {
+            Board board = boardRepository.findById(idx)
+                    .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+            // BoardDto record 생성자에 모든 필드 맞춰서 전달
+            BoardDto boardDto = new BoardDto(
+                    board.getBoardIdx(),
+                    board.getUser().getUserIdx(),
+                    board.getUser().getProfileIdx(),
+                    board.getBoardCategory(),
+                    board.getBoardTitle(),
+                    board.getBoardContent(),
+                    board.getUser().getUserNickname(),
+                    board.getIsUse(),
+
+                    board.getLikeCount(),
+                    board.getViewCount(),
+                    board.getCreateDate(),
+                    board.getUpdateDate(),
+
+                    board.getReplyCount()
+            );
+            return AdminPostDto.fromBoard(boardDto);
+
+        } else if ("중고거래".equals(type)) {
+            Used used = usedRepository.findById(idx)
+                    .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
+            // 닉네임은 엔티티에서 바로 가져오기
+            String nickname = used.getUser().getUserNickname();
+            UsedDto usedDto = new UsedDto(
+                    used.getUsedIdx(),
+                    used.getUsedTitle(),
+                    used.getUsedContent(),
+                    used.getUsedPrice(),
+                    used.getUsedState(),
+                    used.getTradingLoc(),
+                    used.getViewCount(),
+                    used.getCreatedAt(),
+                    used.getUpdatedAt(),
+                    used.getIsUse(),
+                    used.getUser().getUserIdx()
+            );
+            return AdminPostDto.fromUsed(usedDto, nickname);
+
+        } else {
+            throw new IllegalArgumentException("잘못된 게시글 유형입니다.");
+        }
+    }
+
+}

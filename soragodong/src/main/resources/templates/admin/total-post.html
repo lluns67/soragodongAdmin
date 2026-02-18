@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -68,34 +68,43 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
-                                    <th scope="row">1024</th>
-                                    <td>중고장터</td>
-                                    <td class="text-left">
-                                        <a href="javascript:void(0)" onclick="viewPostDetail(1024)" class="text-dark">상태 좋은 파인애플 집 팝니다.</a>
-                                    </td>
-                                    <td>spongebob77</td>
-                                    <td>2026-02-12</td>
-                                    <td>152</td>
-                                    <td>12</td>
-                                    <td><span class="badge badge-primary">게시 중</span></td>
+                                <tr th:each="post : ${postList}">
+                                    <td th:text="${post.idx}">번호</td>
                                     <td>
-                                        <button class="btn btn-xs btn-danger" onclick="deletePost(1024)">삭제</button>
+                                        <span class="badge"
+                                              th:classappend="${post.type == '커뮤니티' ? 'badge-info' : 'badge-success'}"
+                                              th:text="${post.type}">유형</span>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">1023</th>
-                                    <td>자유게시판</td>
-                                    <td class="text-left">
-                                        <a href="javascript:void(0)" class="text-dark">오늘 점심 뭐 먹을까?</a>
-                                    </td>
-                                    <td>patrick_star</td>
-                                    <td>2026-02-12</td>
-                                    <td>45</td>
-                                    <td>2</td>
-                                    <td><span class="badge badge-secondary">삭제됨</span></td>
+                                    <td class="text-left" th:text="${post.title}">제목</td>
+                                    <td th:text="${post.writer}">작성자</td>
+                                    <td th:text="${#temporals.format(post.date, 'yyyy-MM-dd HH:mm')}">작성일</td>
+                                    <td th:text="${post.views}">0</td>
+                                    <td th:text="${post.likeCount}">0</td>
                                     <td>
-                                        <button class="btn btn-xs btn-info" onclick="restorePost(1023)">복구</button>
+                                        <span th:if="${post.isUse}" class="text-primary">게시 중</span>
+                                        <span th:unless="${post.isUse}" class="text-danger">삭제됨</span>
+                                    </td>
+                                    <td>
+                                        <ul class="d-flex justify-content-center">
+                                            <li th:if="${post.isUse}" class="mr-2">
+                                                <button class="btn btn-xs btn-outline-danger"
+                                                        th:onclick="deletePost([[${post.idx}]], [[${post.type}]])">
+                                                    <i class="fa fa-trash"></i> 삭제
+                                                </button>
+                                            </li>
+                                            <li th:unless="${post.isUse}" class="mr-2">
+                                                <button class="btn btn-xs btn-outline-success"
+                                                        th:onclick="restorePost([[${post.idx}]], [[${post.type}]])">
+                                                    <i class="fa fa-undo"></i> 복구
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="btn btn-xs btn-outline-info"
+                                                        th:onclick="viewPostDetail([[${post.idx}]], [[${post.type}]])">
+                                                    <i class="fa fa-search"></i> 상세
+                                                </button>
+                                            </li>
+                                        </ul>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -107,30 +116,101 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="postDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-type-badge">게시물 상세 내용</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="font-weight-bold">제목</label>
+                    <p id="modal-title" class="p-2 bg-light rounded"></p>
+                </div>
+                <div class="form-group">
+                    <label class="font-weight-bold">내용</label>
+                    <div id="modal-content" class="p-3 border rounded" style="min-height: 200px; white-space: pre-wrap;"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="font-weight-bold">작성자</label>
+                        <p id="modal-writer"></p>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <label class="font-weight-bold">조회수</label>
+                        <p id="modal-views"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
-    // 게시물 삭제 함수
-function deletePost(postId) {
-    if (confirm(postId + "번 게시물을 삭제하시겠습니까? 관련 댓글도 모두 숨김 처리됩니다.")) {
-        console.log(postId + " 삭제 요청 전송");
-        // AJAX 로직 추가 예정
-        alert("삭제 처리가 완료되었습니다.");
-        location.reload();
+    // 삭제 및 복구 공통 처리 함수
+    function processPostStatus(postId, postType, actionName) {
+        if (confirm(`[${postType}] ${postId}번 게시물을 ${actionName}하시겠습니까?`)) {
+            $.ajax({
+                url: '/admin/api/post/toggle-status',
+                method: 'POST',
+                data: {
+                    idx: postId,
+                    type: postType
+                },
+                success: function(response) {
+                    alert(`${actionName} 처리가 완료되었습니다.`);
+                    location.reload(); // 화면 갱신
+                },
+                error: function(xhr) {
+                    alert("처리 중 오류가 발생했습니다: " + xhr.responseText);
+                }
+            });
+        }
     }
-}
 
-// 게시물 상세 보기 (모달 또는 페이지 이동)
-function viewPostDetail(postId) {
-    // 상세 내용을 보여주는 모달을 띄우거나 이동 로직
-    // 예: $('#postDetailModal').modal('show');
-    alert(postId + "번 게시물의 상세 내용을 불러옵니다.");
-}
-
-// 게시물 복구 함수
-function restorePost(postId) {
-    if (confirm("삭제된 " + postId + "번 게시물을 다시 복구하시겠습니까?")) {
-        alert("복구 처리가 완료되었습니다.");
-        location.reload();
+    // 기존 함수들을 위 공통 함수 호출로 변경
+    function deletePost(postId, postType) {
+        processPostStatus(postId, postType, "삭제");
     }
+
+    function restorePost(postId, postType) {
+        processPostStatus(postId, postType, "복구");
+    }
+
+
+    function viewPostDetail(postId, postType) {
+        // 유형에 따라 실제 서비스 상세 페이지로 이동하거나 모달을 띄웁니다.
+        const targetUrl = (postType === '커뮤니티') ? '/community/view/' : '/used/view/';
+        window.open(targetUrl + postId, '_blank'); // 새 탭에서 실제 게시물 확인
+    }
+    function viewPostDetail(postId, postType) {
+    $.ajax({
+        url: '/admin/api/post/detail',
+        method: 'GET',
+        data: {
+            idx: postId,
+            type: postType
+        },
+        success: function(data) {
+            // 모달 데이터 세팅
+            const badgeClass = (postType === '커뮤니티') ? 'badge-info' : 'badge-success';
+            $('#modal-type-badge').html(`<span class="badge ${badgeClass}">${postType}</span> ${postId}번 상세 정보`);
+
+            $('#modal-title').text(data.title);
+            $('#modal-content').text(data.content);
+            $('#modal-writer').text(data.writer);
+            $('#modal-views').text(data.views + "회");
+
+            // 모달 띄우기
+            $('#postDetailModal').modal('show');
+        },
+        error: function(xhr) {
+            alert("내용을 불러오는 데 실패했습니다.");
+        }
+    });
 }
 </script>
 <!-- offset area end -->
@@ -163,5 +243,6 @@ function restorePost(postId) {
     <!-- others plugins -->
     <script src="/assets/js/plugins.js"></script>
     <script src="/assets/js/scripts.js"></script>
+
 </body>
 </html>

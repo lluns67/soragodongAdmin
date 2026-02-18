@@ -1,48 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>삭제된 게시물 관리</title>
+    <title>삭제된 게시물</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="/assets/images/icon/favicon.ico">
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
     <link rel="stylesheet" href="/assets/css/themify-icons.css">
     <link rel="stylesheet" href="/assets/css/metisMenu.css">
+    <link rel="stylesheet" href="/assets/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="/assets/css/slicknav.min.css">
+    <!-- amchart css -->
+    <link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+    <!-- others css -->
+    <link rel="stylesheet" href="/assets/css/typography.css">
+    <link rel="stylesheet" href="/assets/css/default-css.css">
     <link rel="stylesheet" href="/assets/css/styles.css">
     <link rel="stylesheet" href="/assets/css/responsive.css">
+    <!-- modernizr css -->
     <script src="/assets/js/vendor/modernizr-2.8.3.min.js"></script>
 </head>
 <body>
-
-<div class="page-title-area">
-    <div class="row align-items-center" style="padding: 20px 0;">
-        <div class="col-sm-6">
-            <div class="breadcrumbs-area clearfix">
-                <h4 class="page-title pull-left">게시물 관리</h4>
-                <ul class="breadcrumbs pull-left">
-                    <li><a href="/admin/index2">Home</a></li>
-                    <li><span>삭제된 게시물</span></li>
-                </ul>
-            </div>
-        </div>
-        <div class="col-sm-6 text-right">
-            <a href="/admin/index2" class="btn btn-primary btn-sm">
-                <i class="fa fa-home"></i> 대시보드로 돌아가기
-            </a>
-        </div>
-    </div>
-</div>
-
 <div class="main-content-inner">
     <div class="row">
         <div class="col-12 mt-5">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="header-title">삭제된 게시물 내역</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="header-title mb-0">삭제된 게시물</h4>
+                        <a href="/admin/index2" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa fa-home"></i> 대시보드로 돌아가기
+                        </a>
+                    </div>
 
                     <div class="row mb-3">
-                        <div class="col-md-10">
-                            <input type="text" class="form-control" placeholder="삭제된 게시물 제목 또는 작성자 검색..." id="deleted-post-search">
+                        <div class="col-md-3">
+                            <select class="custom-select" id="post-category-filter">
+                                <option selected>모든 카테고리</option>
+                                <option value="news">소라고동 소식</option>
+                                <option value="market">중고장터</option>
+                                <option value="community">자유게시판</option>
+                            </select>
+                        </div>
+                        <div class="col-md-7">
+                            <input type="text" class="form-control" placeholder="제목, 내용 또는 작성자 검색..." id="post-search">
                         </div>
                         <div class="col-md-2">
                             <button class="btn btn-primary btn-block">검색</button>
@@ -58,68 +60,189 @@
                                     <th scope="col">카테고리</th>
                                     <th scope="col">제목</th>
                                     <th scope="col">작성자</th>
-                                    <th scope="col">삭제일</th>
+                                    <th scope="col">작성일</th>
+                                    <th scope="col">조회수</th>
+                                    <th scope="col">추천</th>
                                     <th scope="col">상태</th>
                                     <th scope="col">관리</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
-                                    <th scope="row">1023</th>
-                                    <td>자유게시판</td>
-                                    <td class="text-left">오늘 점심 뭐 먹을까?</td>
-                                    <td>patrick_star</td>
-                                    <td>2026-02-12</td>
-                                    <td><span class="badge badge-secondary">삭제됨</span></td>
+                                <tr th:each="post : ${postList}">
+                                    <td th:text="${post.idx}">번호</td>
                                     <td>
-                                        <button class="btn btn-xs btn-success" onclick="restorePost(1023)">복구</button>
-
+                                        <span class="badge"
+                                              th:classappend="${post.type == '커뮤니티' ? 'badge-info' : 'badge-success'}"
+                                              th:text="${post.type}">유형</span>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">1020</th>
-                                    <td>중고장터</td>
-                                    <td class="text-left">가짜 상품 판매글입니다.</td>
-                                    <td>bad_user1</td>
-                                    <td>2026-02-11</td>
-                                    <td><span class="badge badge-danger">강제삭제</span></td>
+                                    <td class="text-left" th:text="${post.title}">제목</td>
+                                    <td th:text="${post.writer}">작성자</td>
+                                    <td th:text="${#temporals.format(post.date, 'yyyy-MM-dd HH:mm')}">작성일</td>
+                                    <td th:text="${post.views}">0</td>
+                                    <td th:text="${post.likeCount}">0</td>
                                     <td>
-                                        <button class="btn btn-xs btn-success" onclick="restorePost(1020)">복구</button>
-
+                                        <span th:if="${post.isUse}" class="text-primary">게시 중</span>
+                                        <span th:unless="${post.isUse}" class="text-danger">삭제됨</span>
+                                    </td>
+                                    <td>
+                                        <ul class="d-flex justify-content-center">
+                                            <li th:if="${post.isUse}" class="mr-2">
+                                                <button class="btn btn-xs btn-outline-danger"
+                                                        th:onclick="deletePost([[${post.idx}]], [[${post.type}]])">
+                                                    <i class="fa fa-trash"></i> 삭제
+                                                </button>
+                                            </li>
+                                            <li th:unless="${post.isUse}" class="mr-2">
+                                                <button class="btn btn-xs btn-outline-success"
+                                                        th:onclick="restorePost([[${post.idx}]], [[${post.type}]])">
+                                                    <i class="fa fa-undo"></i> 복구
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button class="btn btn-xs btn-outline-info"
+                                                        th:onclick="viewPostDetail([[${post.idx}]], [[${post.type}]])">
+                                                    <i class="fa fa-search"></i> 상세
+                                                </button>
+                                            </li>
+                                        </ul>
                                     </td>
                                 </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-
-                    <div class="pagination_area pull-right mt-5">
-                        <ul>
-                            <li><a href="#"><i class="fa fa-chevron-left"></i></a></li>
-                            <li class="active"><a href="#">1</a></li>
-                            <li><a href="#">2</a></li>
-                            <li><a href="#"><i class="fa fa-chevron-right"></i></a></li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
-<script src="/assets/js/bootstrap.min.js"></script>
+<div class="modal fade" id="postDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-type-badge">게시물 상세 내용</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="font-weight-bold">제목</label>
+                    <p id="modal-title" class="p-2 bg-light rounded"></p>
+                </div>
+                <div class="form-group">
+                    <label class="font-weight-bold">내용</label>
+                    <div id="modal-content" class="p-3 border rounded" style="min-height: 200px; white-space: pre-wrap;"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="font-weight-bold">작성자</label>
+                        <p id="modal-writer"></p>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <label class="font-weight-bold">조회수</label>
+                        <p id="modal-views"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
-    // 게시물 복구 함수
-    function restorePost(postId) {
-        if (confirm(postId + "번 게시물을 복구하시겠습니까? 다시 일반 사용자에게 노출됩니다.")) {
-            // AJAX 로직 (isUse를 다시 1로 변경 등)
-            alert("게시물이 성공적으로 복구되었습니다.");
-            location.reload();
+    // 삭제 및 복구 공통 처리 함수
+    function processPostStatus(postId, postType, actionName) {
+        if (confirm(`[${postType}] ${postId}번 게시물을 ${actionName}하시겠습니까?`)) {
+            $.ajax({
+                url: '/admin/api/post/toggle-status',
+                method: 'POST',
+                data: {
+                    idx: postId,
+                    type: postType
+                },
+                success: function(response) {
+                    alert(`${actionName} 처리가 완료되었습니다.`);
+                    location.reload(); // 화면 갱신
+                },
+                error: function(xhr) {
+                    alert("처리 중 오류가 발생했습니다: " + xhr.responseText);
+                }
+            });
         }
     }
 
+    // 기존 함수들을 위 공통 함수 호출로 변경
+    function deletePost(postId, postType) {
+        processPostStatus(postId, postType, "삭제");
+    }
 
+    function restorePost(postId, postType) {
+        processPostStatus(postId, postType, "복구");
+    }
+
+
+    function viewPostDetail(postId, postType) {
+        // 유형에 따라 실제 서비스 상세 페이지로 이동하거나 모달을 띄웁니다.
+        const targetUrl = (postType === '커뮤니티') ? '/community/view/' : '/used/view/';
+        window.open(targetUrl + postId, '_blank'); // 새 탭에서 실제 게시물 확인
+    }
+    function viewPostDetail(postId, postType) {
+    $.ajax({
+        url: '/admin/api/post/detail',
+        method: 'GET',
+        data: {
+            idx: postId,
+            type: postType
+        },
+        success: function(data) {
+            // 모달 데이터 세팅
+            const badgeClass = (postType === '커뮤니티') ? 'badge-info' : 'badge-success';
+            $('#modal-type-badge').html(`<span class="badge ${badgeClass}">${postType}</span> ${postId}번 상세 정보`);
+
+            $('#modal-title').text(data.title);
+            $('#modal-content').text(data.content);
+            $('#modal-writer').text(data.writer);
+            $('#modal-views').text(data.views + "회");
+
+            // 모달 띄우기
+            $('#postDetailModal').modal('show');
+        },
+        error: function(xhr) {
+            alert("내용을 불러오는 데 실패했습니다.");
+        }
+    });
+}
 </script>
+<!-- offset area end -->
+<!-- jquery latest version -->
+<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
+<!-- bootstrap 4 js -->
+<script src="/assets/js/popper.min.js"></script>
+<script src="/assets/js/bootstrap.min.js"></script>
+<script src="/assets/js/owl.carousel.min.js"></script>
+<script src="/assets/js/metisMenu.min.js"></script>
+<script src="/assets/js/jquery.slimscroll.min.js"></script>
+<script src="/assets/js/jquery.slicknav.min.js"></script>
+
+<!-- start chart js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+<!-- start highcharts js -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<!-- start zingchart js -->
+<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
+<script>
+    zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
+    ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9", "ee6b7db5b51705a13dc2339db3edaf6d"];
+</script>
+<!-- all line chart activation -->
+<script src="/assets/js/line-chart.js"></script>
+<!-- all bar chart activation -->
+<script src="/assets/js/bar-chart.js"></script>
+<!-- all pie chart -->
+<script src="/assets/js/pie-chart.js"></script>
+<!-- others plugins -->
+<script src="/assets/js/plugins.js"></script>
+<script src="/assets/js/scripts.js"></script>
+
 </body>
 </html>

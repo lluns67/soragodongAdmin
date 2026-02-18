@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 
 @Controller
@@ -220,9 +221,16 @@ public class AdminController {
         return "admin/total-post";}
 
 
-	@GetMapping("deleted-post")
-	public String deletePost(){ return  "admin/deleted-post";}
-	
+    @GetMapping("deleted-post")
+    public String deletedPostPage(Model model) {
+        // AdminService에서 전체 게시글 중 삭제된 것만 필터링한 리스트를 가져옵니다.
+        List<AdminPostDto> deletedPosts = adminService.findAllPosts().stream()
+                .filter(post -> !post.getIsUse()) // isUse가 false인 것만 추출
+                .collect(Collectors.toList());
+
+        model.addAttribute("postList", deletedPosts);
+        return "admin/deleted-post"; // 삭제된 게시물 전용 뷰
+    }
 	
 	// 공지 보내기
     @GetMapping("notice-send")

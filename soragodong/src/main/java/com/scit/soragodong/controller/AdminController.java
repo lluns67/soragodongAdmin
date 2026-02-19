@@ -2,12 +2,10 @@ package com.scit.soragodong.controller;
 
 import com.scit.soragodong.domain.dto.*;
 import com.scit.soragodong.domain.entity.Admin;
+import com.scit.soragodong.domain.entity.Notice;
 import com.scit.soragodong.exception.ErrorCode;
 import com.scit.soragodong.repository.AdminRepository;
-import com.scit.soragodong.service.AdminService;
-import com.scit.soragodong.service.AdminStoreService;
-import com.scit.soragodong.service.TimesaleService;
-import com.scit.soragodong.service.UserService;
+import com.scit.soragodong.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +38,7 @@ public class AdminController {
     private final AdminService adminService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AdminRepository adminRepository;
+	private final NoticeService noticeService;
 
     @GetMapping("store")
     public String store(@RequestParam(value = "path", required = false, defaultValue = "전체지역") String path
@@ -253,7 +252,12 @@ public class AdminController {
     public String noticeSend(){ return "admin/notice-send";}
 	
 	@GetMapping("push-history")
-	public String pushHistory(){ return "admin/push-history";}
+	public String pushHistory(Model model) {
+		// 활성화된 공지사항 목록 조회 (최신순)
+		List<Notice> noticeList = noticeService.getActiveNotices();
+		model.addAttribute("noticeList", noticeList);
+		return "admin/push-history";
+	}
 	
 	
 	@GetMapping("monitoring")

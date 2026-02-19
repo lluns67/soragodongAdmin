@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>알림 발송 내역</title>
@@ -26,6 +26,9 @@
             </div>
         </div>
         <div class="col-sm-6 text-right">
+            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#noticeWriteModal">
+                <i class="fa fa-pencil"></i> 새 공지 작성
+            </button>
             <a href="/admin/index2" class="btn btn-primary btn-sm">
                 <i class="fa fa-home"></i> 대시보드로 돌아가기
             </a>
@@ -53,24 +56,19 @@
                                     <th scope="col">확인</th>
                                 </tr>
                                 </thead>
-                                <tbody>
-                                <tr>
-                                    <th scope="row">1</th>
-
-
-                                    <td class="text-left">[공지] 서버 점검 안내</td>
-                                    <td>2026-02-13 14:00</td>
+                                <tbody id="notice-list-body">
+                                <tr th:each="notice, stat : ${noticeList}">
+                                    <th scope="row" th:text="${stat.count}">1</th>
+                                    <td class="text-left" th:text="${notice.title}">제목</td>
+                                    <td th:text="${#temporals.format(notice.createAt, 'yyyy-MM-dd HH:mm')}">2026-02-13</td>
                                     <td><span class="badge badge-success">발송 완료</span></td>
-                                    <td><button class="btn btn-xs btn-info" onclick="viewLogDetail(1)">상세</button></td>
+                                    <td>
+                                        <button class="btn btn-xs btn-info"
+                                                th:onclick="viewNoticeDetail([[${notice.noticeIdx}]])">상세</button>
+                                    </td>
                                 </tr>
-                                <tr>
-                                    <th scope="row">2</th>
-
-
-                                    <td class="text-left">신규 가맹점 등록 승인 안내</td>
-                                    <td>2026-02-12 10:30</td>
-                                    <td><span class="badge badge-success">발송 완료</span></td>
-                                    <td><button class="btn btn-xs btn-info" onclick="viewLogDetail(2)">상세</button></td>
+                                <tr th:if="${#lists.isEmpty(noticeList)}">
+                                    <td colspan="5">발송된 공지사항이 없습니다.</td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -91,16 +89,57 @@
     </div>
 </div>
 
-<div class="modal fade" id="logDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+
+<div class="modal fade" id="noticeWriteModal">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">알림 발송 상세 내용</h5>
+                <h5 class="modal-title">전체 공지사항 작성</h5>
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body">
-                <p><strong>발송 내용:</strong></p>
-                <div class="p-3 bg-light rounded mt-2" id="log-content-detail">
+                <form id="notice-form">
+                    <div class="form-group">
+                        <label>공지 제목</label>
+                        <input class="form-control" type="text" id="notice-title" placeholder="제목을 입력하세요.">
+                    </div>
+                    <div class="form-group">
+                        <label>공지 내용</label>
+                        <textarea class="form-control" id="notice-content" rows="8" placeholder="상세 내용을 입력하세요."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>첨부 이미지 (최대 10장)</label>
+                        <div class="image-attach-row" id="imageRow" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <div class="camera-btn" onclick="document.getElementById('fileInput').click()"
+                                 style="width: 80px; height: 80px; border: 1px dashed #ddd; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px; background: #f9f9f9;">
+                                <i class="fa fa-camera" style="font-size: 24px; color: #888;"></i>
+                                <span id="imgCount" style="font-size: 12px; color: #888;">0/10</span>
+                            </div>
+                            <input type="file" id="fileInput" style="display: none;" accept="image/*" multiple onchange="handleFileSelect(this)">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="sendNotice()">공지 발송</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="logDetailModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detail-title">공지 상세 내용</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>내용:</strong></p>
+                <div class="p-3 bg-light rounded mt-2 mb-3" id="log-content-detail" style="white-space: pre-wrap;">
+                </div>
+                <p><strong>첨부 이미지:</strong></p>
+                <div id="notice-images-detail" class="d-flex flex-wrap gap-2 mt-2">
                 </div>
             </div>
             <div class="modal-footer">
@@ -109,15 +148,112 @@
         </div>
     </div>
 </div>
-
 <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
 <script src="/assets/js/bootstrap.min.js"></script>
 <script>
-    function viewLogDetail(logId) {
-        // 실제로는 AJAX로 데이터를 가져오겠지만, 예시로 텍스트를 채웁니다.
-        $('#log-content-detail').text(logId + "번 알림의 상세 본문 내용입니다. 서버 점검이 2월 14일 01시부터 진행될 예정입니다.");
-        $('#logDetailModal').modal('show');
+    let selectedFiles = [];
+
+    function handleFileSelect(input) {
+        const files = Array.from(input.files);
+        if (selectedFiles.length + files.length > 10) {
+            alert("사진은 최대 10장까지입니다.");
+            return;
+        }
+        files.forEach(file => {
+            if (file.type.startsWith('image/')) {
+                selectedFiles.push(file);
+                const tempUrl = URL.createObjectURL(file);
+                const div = document.createElement('div');
+                div.className = 'preview-box';
+                div.style = "position: relative; width: 80px; height: 80px;";
+                div.innerHTML = `
+                    <img src="${tempUrl}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;">
+                    <div onclick="removeFile(this)" style="position: absolute; top: -5px; right: -5px; background: #ff4747; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px;">
+                        <i class="fa fa-close"></i>
+                    </div>`;
+                document.getElementById('imageRow').appendChild(div);
+            }
+        });
+        updateImageCount();
     }
+
+    function removeFile(btn) {
+        const box = btn.parentElement;
+        const index = Array.from(box.parentElement.children).indexOf(box) - 1;
+        selectedFiles.splice(index, 1);
+        box.remove();
+        updateImageCount();
+    }
+
+    function updateImageCount() {
+        document.getElementById('imgCount').innerText = `${selectedFiles.length}/10`;
+    }
+
+    async function sendNotice() {
+        const title = $('#notice-title').val();
+        const content = $('#notice-content').val();
+        if (!title || !content) return alert("제목과 내용을 입력해주세요.");
+
+        if (confirm("공지를 발송하시겠습니까?")) {
+            const formData = new FormData();
+            formData.append("title", title);
+            formData.append("content", content);
+            selectedFiles.forEach(file => formData.append("noticeFiles", file));
+
+            try {
+                const response = await fetch('/admin/notice/write', { method: 'POST', body: formData });
+                if (response.ok) {
+                    alert("공지가 등록되었습니다.");
+                    location.reload();
+                }
+            } catch (e) { console.error(e); }
+        }
+    }
+
+    /**
+ * 공지사항 상세 조회 함수
+ */
+/**
+ * 공지사항 상세 조회 및 모달 출력
+ */
+function viewNoticeDetail(noticeIdx) {
+    $.ajax({
+        url: '/admin/notice/api/' + noticeIdx,
+        method: 'GET',
+        success: function(data) {
+            // 제목과 내용 채우기
+            $('#detail-title').text(data.title);
+            $('#log-content-detail').text(data.content);
+
+            // 이미지 영역 초기화
+            const imgContainer = $('#notice-images-detail');
+            imgContainer.empty();
+
+            // 첨부된 파일이 있으면 이미지 태그 생성
+            if (data.files && data.files.length > 0) {
+                data.files.forEach(file => {
+                    const imgTag = `
+                        <div style="margin: 5px;">
+                            <img src="/img/${file.fileIdx}"
+                                 style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;"
+                                 onclick="window.open(this.src)">
+                        </div>
+                    `;
+                    imgContainer.append(imgTag);
+                });
+            } else {
+                imgContainer.html('<p class="text-muted small">첨부된 이미지가 없습니다.</p>');
+            }
+
+            // 모달 열기
+            $('#logDetailModal').modal('show');
+        },
+        error: function(err) {
+            alert("정보를 불러오는 중 오류가 발생했습니다.");
+            console.error(err);
+        }
+    });
+}
 </script>
 </body>
 </html>

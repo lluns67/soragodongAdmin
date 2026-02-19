@@ -11,7 +11,8 @@ public enum FileRefType {
     BOARD("BOARD"),
     STORE("STORE"),
     PRODUCT("PRODUCT"),
-    USED("USED");
+    USED("USED"),
+	NOTICE("NOTICE");
 
     private final String code;
 }

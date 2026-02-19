@@ -106,4 +106,15 @@ public class OwnerController {
         }
         return "redirect:/owner/dashboard";
     }
+	
+	@PostMapping("/product/delete/{productNum}")
+	public String deleteProduct(@PathVariable Integer productNum, RedirectAttributes rttr) {
+		try {
+			timesaleService.deleteProduct(productNum);
+			rttr.addFlashAttribute("message", "상품이 삭제되었습니다.");
+		} catch (Exception e) {
+			rttr.addFlashAttribute("error", "삭제 중 오류 발생: " + e.getMessage());
+		}
+		return "redirect:/owner/dashboard";
+	}
 }

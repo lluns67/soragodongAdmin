@@ -123,6 +123,10 @@
                                                 onclick="openEditModal(this)">
                                             수정
                                         </button>
+                                        <button class="btn btn-xs btn-outline-danger" type="button"
+                                                th:onclick="confirmDelete([[${product.productNum}]])">
+                                            삭제
+                                        </button>
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(productList)}">
@@ -318,6 +322,9 @@
         </div>
     </div>
 </div>
+<!--삭제용-->
+<form id="deleteForm" method="post" style="display:none;">
+</form>
 <script>
     function openEditModal(btn) {
     // 버튼의 data-* 속성에서 값을 읽어옴
@@ -375,6 +382,13 @@ function handleFileSelect(input) {
     });
 }
 
+function confirmDelete(productNum) {
+    if (confirm("정말로 이 상품을 삭제하시겠습니까? 관련 이미지 파일도 함께 삭제됩니다.")) {
+        const form = document.getElementById('deleteForm');
+        form.action = '/owner/product/delete/' + productNum;
+        form.submit();
+    }
+}
 
 </script>
 <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>

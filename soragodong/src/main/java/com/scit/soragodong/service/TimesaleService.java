@@ -6,25 +6,32 @@ import com.scit.soragodong.domain.dto.StoreProductDto;
 import com.scit.soragodong.domain.entity.Store;
 import com.scit.soragodong.domain.entity.StoreProduct;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.repository.FileRepository;
 import com.scit.soragodong.repository.StoreProductRepository;
 import com.scit.soragodong.repository.StoreRepository;
+import com.scit.soragodong.util.FileUploadUtil;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
 @AllArgsConstructor
 @Transactional
+@Slf4j
 public class TimesaleService {
 
     private final StoreProductRepository storeProductRepository;
     private final StoreRepository storeRepository;
     private final FileService fileService;
-
+	private final FileRepository fileRepository;
+	private final FileUploadUtil fileUploadUtil;
+	
     /**
      * 모든 상품(음식) 데이터 조회
      */
@@ -257,5 +264,37 @@ public class TimesaleService {
 		Store store = storeRepository.findById(idx)
 				.orElseThrow(() -> new IllegalArgumentException("해당 점포가 없다"));
 		return convertToDto(store);
+	}
+	
+	@Transactional
+	public void deleteProduct(Integer productNum) {
+		// 1. 삭제할 상품 조회
+		StoreProduct product = storeProductRepository.findById(productNum)
+				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
+		
+		// 2. 물리 파일 삭제 (옵션)
+		// DB에 저장된 productPictureIdx가 File 테이블의 ID라면, File 엔티티를 조회해 실제 경로를 알아내야 합니다.
+		String fileIdxStr = product.getProductPictureIdx();
+		if (fileIdxStr != null && !fileIdxStr.isEmpty()) {
+			try {
+				int fileIdx = Integer.parseInt(fileIdxStr);
+				// fileRepository에서 파일 정보를 가져옴 (경로: /202602/uuid.png)
+				fileRepository.findById(fileIdx).ifPresent(file -> {
+					try {
+						// FileUploadUtil의 deleteFile 호출
+						fileUploadUtil.deleteFile(file.getFilePath());
+						// DB에서도 파일 정보 삭제 혹은 isUse = false 처리
+						fileRepository.delete(file);
+					} catch (IOException e) {
+						log.error("서버 파일 삭제 실패: {}", file.getFilePath(), e);
+					}
+				});
+			} catch (NumberFormatException e) {
+				log.warn("잘못된 파일 ID 형식입니다: {}", fileIdxStr);
+			}
+		}
+		
+		// 3. 상품 데이터 삭제
+		storeProductRepository.delete(product);
 	}
 }

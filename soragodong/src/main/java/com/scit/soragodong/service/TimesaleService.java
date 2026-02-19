@@ -239,6 +239,8 @@ public class TimesaleService {
         // 2. 값 변경 (Setter나 별도 메서드 사용)
         store.setStoreName(dto.storeName());
         store.setStoreAddress(dto.storeAddress());
+		store.setStoreLat(dto.storeLat()); // 위도 저장
+		store.setStoreLng(dto.storeLng()); // 경도 저장
         store.setStoreOpenTime(dto.storeOpenTime());
         store.setStoreCloseTime(dto.storeCloseTime());
         store.setEventNote(dto.eventNote());

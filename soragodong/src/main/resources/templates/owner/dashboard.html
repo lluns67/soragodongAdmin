@@ -20,6 +20,9 @@
     <link rel="stylesheet" href="/assets/css/responsive.css">
     <!-- modernizr css -->
     <script src="/assets/js/vendor/modernizr-2.8.3.min.js"></script>
+<!--    위/경도-->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 <div class="main-content-inner">
@@ -272,7 +275,27 @@
                         </div>
                         <div class="form-group col-md-6">
                             <label>상점 주소</label>
-                            <input type="text" name="storeAddress" class="form-control" th:value="${store.storeAddress}" required>
+                            <div class="input-group">
+                                <input type="text" id="storeAddress" name="storeAddress" class="form-control" th:value="${store.storeAddress}" required>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="searchAddressToCoords()">좌표 찾기</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>상점 위치 설정 (지도를 클릭하거나 마커를 드래그하세요)</label>
+                            <div id="map" style="height: 300px; border-radius: 8px; border: 1px solid #ddd;"></div>
+
+                            <div class="form-row mt-2">
+                                <div class="col">
+                                    <label class="small">위도 (Latitude)</label>
+                                    <input type="text" id="storeLat" name="storeLat" class="form-control form-control-sm" th:value="${store.storeLat}" readonly>
+                                </div>
+                                <div class="col">
+                                    <label class="small">경도 (Longitude)</label>
+                                    <input type="text" id="storeLng" name="storeLng" class="form-control form-control-sm" th:value="${store.storeLng}" readonly>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -325,6 +348,10 @@
 <!--삭제용-->
 <form id="deleteForm" method="post" style="display:none;">
 </form>
+<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
+<!-- bootstrap 4 js -->
+<script src="/assets/js/popper.min.js"></script>
+<script src="/assets/js/bootstrap.min.js"></script>
 <script>
     function openEditModal(btn) {
     // 버튼의 data-* 속성에서 값을 읽어옴
@@ -389,12 +416,97 @@ function confirmDelete(productNum) {
         form.submit();
     }
 }
+<!--좌표 위/경도-->
+
+let map, marker;
+
+// 모달이 완전히 열린 후 지도를 로드해야 깨지지 않습니다.
+$('#editStoreModal').on('shown.bs.modal', function () {
+    const initialLat = parseFloat($('#storeLat').val()) || 37.5665; // 기본값 서울
+    const initialLng = parseFloat($('#storeLng').val()) || 126.9780;
+
+    if (!map) {
+        // 1. 지도 초기화
+        map = L.map('map').setView([initialLat, initialLng], 15);
+
+        // 2. 배경 지도 타일 설정 (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // 3. 드래그 가능한 마커 추가
+        marker = L.marker([initialLat, initialLng], {
+            draggable: true
+        }).addTo(map);
+
+        // 마커 드래그 시 좌표 업데이트
+        marker.on('dragend', function (e) {
+            updateCoords(e.target.getLatLng());
+        });
+
+        // 지도 클릭 시 마커 이동 및 좌표 업데이트
+        map.on('click', function (e) {
+            marker.setLatLng(e.latlng);
+            updateCoords(e.latlng);
+        });
+    } else {
+        // 모달을 다시 열 때 위치 갱신
+        map.invalidateSize();
+        const latLng = new L.LatLng(initialLat, initialLng);
+        map.setView(latLng, 15);
+        marker.setLatLng(latLng);
+    }
+    // [추가 위치]: 모달이 열릴 때 위경도 값이 0이거나 비어있다면 주소를 기반으로 위치 찾기 실행
+    if (!parseFloat($('#storeLat').val()) || parseFloat($('#storeLat').val()) === 0) {
+        searchAddressToCoords();
+    }
+});
+
+function updateCoords(latlng) {
+    $('#storeLat').val(latlng.lat.toFixed(6));
+    $('#storeLng').val(latlng.lng.toFixed(6));
+}
+
+/**
+ * 입력된 주소를 좌표로 변환하여 지도와 마커를 이동시킵니다.
+ */
+function searchAddressToCoords() {
+    const address = document.getElementById('storeAddress').value;
+    if (!address) {
+        alert("주소를 입력해주세요.");
+        return;
+    }
+
+    // Nominatim API 사용 (무료 지오코딩 서비스)
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+
+                // 1. 지도 중심 이동
+                map.setView([lat, lon], 16);
+
+                // 2. 마커 위치 변경
+                marker.setLatLng([lat, lon]);
+
+                // 3. input 필드(위도, 경도) 값 업데이트
+                updateCoords({ lat: lat, lng: lon });
+            } else {
+                alert("해당 주소의 좌표를 찾을 수 없습니다. 지도에서 직접 선택해주세요.");
+            }
+        })
+        .catch(error => {
+            console.error("지오코딩 에러:", error);
+            alert("좌표 검색 중 오류가 발생했습니다.");
+        });
+}
 
 </script>
-<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
-<!-- bootstrap 4 js -->
-<script src="/assets/js/popper.min.js"></script>
-<script src="/assets/js/bootstrap.min.js"></script>
+
 <script src="/assets/js/owl.carousel.min.js"></script>
 <script src="/assets/js/metisMenu.min.js"></script>
 <script src="/assets/js/jquery.slimscroll.min.js"></script>

@@ -186,16 +186,12 @@ public class TimesaleService {
                     storeProduct.getProductNum(),
                     files
             );
-            // 4. 업로드된 파일 중 첫 번째 파일의 경로를 상품의 대표 이미지(productPictureIdx)로 설정
-            if (!uploadedFiles.isEmpty()) {
-                // FileRes record의 fileUrl(상대경로)을 가져와 업데이트
-                String representativeImage = uploadedFiles.get(0).fileUrl();
-                storeProduct.setProductPictureIdx(representativeImage);
-
-                // JPA의 더티 체킹(Dirty Checking)으로 인해 명시적 save 없이도 트랜잭션 종료 시 업데이트됩니다.
-                // 혹은 확실하게 하기 위해 한 번 더 호출 가능
-                // storeProductRepository.save(storeProduct);
-            }
+            
+			if (!uploadedFiles.isEmpty()) {
+				// 경로(fileUrl) 대신 파일의 PK인 fileIdx를 저장합니다.
+				Integer firstFileIdx = uploadedFiles.get(0).fileIdx();
+				storeProduct.setProductPictureIdx(String.valueOf(firstFileIdx));
+			}
         }
     }
 
@@ -220,11 +216,13 @@ public class TimesaleService {
                     product.getProductNum(),
                     files
             );
-
-            // 대표 이미지 업데이트
-            if (!uploadedFiles.isEmpty()) {
-                product.setProductPictureIdx(uploadedFiles.get(0).fileUrl());
-            }
+			
+			// 상품 수정 수정
+			if (!uploadedFiles.isEmpty()) {
+				Integer firstFileIdx = uploadedFiles.get(0).fileIdx();
+				// productDto는 불변일 수 있으므로 엔티티(product)에 직접 세팅하세요.
+				product.setProductPictureIdx(String.valueOf(firstFileIdx));
+			}
         }
     }
 
@@ -247,9 +245,11 @@ public class TimesaleService {
                     store.getStoreIdx(),
                     files
             );
-            if (!uploaded.isEmpty()) {
-                store.setStorePictureIdx(uploaded.get(0).fileUrl());
-            }
+			// 상점 정보 수정 수정
+			if (!uploaded.isEmpty()) {
+				Integer firstFileIdx = uploaded.get(0).fileIdx();
+				store.setStorePictureIdx(String.valueOf(firstFileIdx));
+			}
         }
     }
 	

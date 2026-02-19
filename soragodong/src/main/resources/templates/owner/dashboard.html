@@ -51,7 +51,8 @@
                     </div>
                     <div class="row">
                         <div class="col-md-3">
-                            <img th:src="@{/uploads/{id}(id=${store.storePictureIdx})}" class="img-fluid rounded" alt="Store Image"
+                            <img th:src="@{/img/{id}(id=${store.storePictureIdx})}"
+                                 class="img-fluid rounded"
                                  th:if="${store.storePictureIdx != null}">
                             <div th:unless="${store.storePictureIdx != null}" class="bg-light d-flex align-items-center justify-content-center" style="height:200px;">
                                 <span>이미지 없음</span>
@@ -333,7 +334,7 @@
     const ePrice = $(btn).data('eprice');
     const qty = $(btn).data('qty');
     const cat = $(btn).data('cat');
-    const img = $(btn).data('img');
+    const fileIdx = $(btn).data('img'); // DB의 file_idx 값
 
     // 모달 input에 세팅
     $('#editProductNum').val(num);
@@ -344,14 +345,44 @@
     $('#editCategory').val(cat);
 
     // 현재 이미지 미리보기
-    if(img) {
-        $('#currentImageArea').html(`<img src="/${img}" style="width:100px; border-radius:5px;">`);
+     if(fileIdx) {
+        // 경로가 아닌 /img/ID 형식을 사용합니다.
+        $('#currentImageArea').html(`<img src="/img/${fileIdx}" style="width:100px; border-radius:5px;">`);
     } else {
         $('#currentImageArea').html('<span class="text-muted">이미지 없음</span>');
     }
-
     $('#editProductModal').modal('show');
 }
+
+/** * 커뮤니티 스타일의 파일 선택 및 미리보기 핸들러
+ */
+function handleFileSelect(input) {
+    const files = Array.from(input.files);
+    const container = document.getElementById('imageRow'); // 미리보기가 들어갈 부모 요소
+
+    files.forEach(file => {
+        if (file.type.startsWith('image/')) {
+            // 브라우저 메모리에 임시 URL 생성 (서버 업로드 전 미리보기용)
+            const tempUrl = URL.createObjectURL(file);
+
+            const div = document.createElement('div');
+            div.className = 'preview-box';
+            div.style = "position: relative; width: 80px; height: 80px; margin-right: 10px;";
+
+            // 커뮤니티 스타일의 이미지 태그 및 삭제 버튼 구성
+            div.innerHTML = `
+                <img src="${tempUrl}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px;">
+                <div class="btn-remove-img" onclick="this.parentElement.remove()"
+                     style="position: absolute; top: -5px; right: -5px; cursor: pointer; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px;">
+                    <i class="fa fa-close"></i>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+    });
+}
+
+
 </script>
 <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
 <!-- bootstrap 4 js -->

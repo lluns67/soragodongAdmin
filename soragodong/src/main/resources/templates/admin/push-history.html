@@ -52,8 +52,8 @@
 
                                     <th scope="col">제목</th>
                                     <th scope="col">발송 일시</th>
-                                    <th scope="col">상태</th>
                                     <th scope="col">확인</th>
+                                    <th scope="col">삭제</th>
                                 </tr>
                                 </thead>
                                 <tbody id="notice-list-body">
@@ -61,10 +61,15 @@
                                     <th scope="row" th:text="${stat.count}">1</th>
                                     <td class="text-left" th:text="${notice.title}">제목</td>
                                     <td th:text="${#temporals.format(notice.createAt, 'yyyy-MM-dd HH:mm')}">2026-02-13</td>
-                                    <td><span class="badge badge-success">발송 완료</span></td>
+
                                     <td>
                                         <button class="btn btn-xs btn-info"
                                                 th:onclick="viewNoticeDetail([[${notice.noticeIdx}]])">상세</button>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-xs btn-danger" th:onclick="deleteNotice([[${notice.noticeIdx}]])">
+                                            <i class="fa fa-trash"></i> 삭제
+                                        </button>
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(noticeList)}">
@@ -253,6 +258,24 @@ function viewNoticeDetail(noticeIdx) {
             console.error(err);
         }
     });
+}
+
+// push-history.html 하단 스크립트 영역
+function deleteNotice(noticeIdx) {
+    if (confirm("이 공지사항을 삭제하시겠습니까?")) {
+        $.ajax({
+            url: '/admin/notice/api/' + noticeIdx,
+            method: 'DELETE',
+            success: function(response) {
+                alert("공지사항이 삭제되었습니다.");
+                location.reload(); // 목록 새로고침
+            },
+            error: function(err) {
+                alert("삭제 중 오류가 발생했습니다.");
+                console.error(err);
+            }
+        });
+    }
 }
 </script>
 </body>

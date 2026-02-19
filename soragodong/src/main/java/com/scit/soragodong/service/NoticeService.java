@@ -69,4 +69,13 @@ public class NoticeService {
 		// 상수는 (byte) 1 로 캐스팅하여 전달합니다.
 		return noticeRepository.findByIsUseTrueOrderByCreateAtDesc();
 	}
+	
+	@Transactional
+	public void deleteNotice(Integer noticeIdx) {
+		Notice notice = noticeRepository.findById(noticeIdx)
+				.orElseThrow(() -> new IllegalArgumentException("해당 공지사항이 존재하지 않습니다."));
+		
+		// 논리 삭제 처리
+		notice.setIsUse(false);
+	}
 }

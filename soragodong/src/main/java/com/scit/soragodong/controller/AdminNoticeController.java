@@ -79,4 +79,14 @@ public class AdminNoticeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 	}
+	@DeleteMapping("/api/{noticeIdx}")
+	@ResponseBody
+	public ResponseEntity<String> deleteNotice(@PathVariable Integer noticeIdx) {
+		try {
+			noticeService.deleteNotice(noticeIdx);
+			return ResponseEntity.ok("success");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	}
 }

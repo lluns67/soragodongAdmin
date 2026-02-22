@@ -1,121 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>모니터링</title>
+    <title>실시간 서버 모니터링</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="shortcut icon" type="image/png" href="/assets/images/icon/favicon.ico">
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="/assets/css/font-awesome.min.css">
-    <link rel="stylesheet" href="/assets/css/themify-icons.css">
-    <link rel="stylesheet" href="/assets/css/metisMenu.css">
-    <link rel="stylesheet" href="/assets/css/owl.carousel.min.css">
-    <link rel="stylesheet" href="/assets/css/slicknav.min.css">
-    <!-- amchart css -->
-    <link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
-    <!-- others css -->
-    <link rel="stylesheet" href="/assets/css/typography.css">
-    <link rel="stylesheet" href="/assets/css/default-css.css">
     <link rel="stylesheet" href="/assets/css/styles.css">
     <link rel="stylesheet" href="/assets/css/responsive.css">
-    <!-- modernizr css -->
-    <script src="/assets/js/vendor/modernizr-2.8.3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<div class="page-title-area">
-    <div class="row align-items-center" style="padding: 20px 0;">
-        <div class="col-sm-6">
-            <div class="breadcrumbs-area clearfix">
-                <h4 class="page-title pull-left">실시간 모니터링</h4>
-                <ul class="breadcrumbs pull-left">
-                    <li><a href="/admin/index2">Home</a></li>
-                    <li><span>Monitoring</span></li>
-                </ul>
+<div class="main-content-inner">
+    <div class="row mt-5">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6>본 서버 상태</h6>
+                    <h3 id="server-status">연결 중...</h3>
+                </div>
             </div>
         </div>
-        <div class="col-sm-6 text-right">
-            <div class="user-profile pull-right" style="background: none; padding: 0; margin: 0;">
-                <a href="/admin/index2" class="btn btn-primary btn-sm" style="border-radius: 4px; padding: 8px 15px;">
-                    <i class="fa fa-home"></i> 대시보드로 돌아가기
-                </a>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6>실시간 접속자</h6>
+                    <h3 id="active-users">0명</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h6>CPU 사용량</h6>
+                    <h3 id="cpu-usage">0%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6>메모리 사용량</h6>
+                    <h3 id="mem-usage">0%</h3>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<div class="main-content-inner">
-    <div class="row">
-        <div class="col-md-4 mt-5">
 
-            <div class="card card-bordered">
-                <div class="card-body">
-                    <h4 class="header-title">서버 CPU 사용률</h4>
-                    <div id="cpu_gauge" style="height: 200px;"></div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mt-5">
-            <div class="card card-bordered">
-                <div class="card-body">
-                    <h4 class="header-title">메모리 점유율</h4>
-                    <div id="memory_gauge" style="height: 200px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 mt-5">
+    <div class="row mt-4">
+        <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="header-title">실시간 트래픽 (최근 1시간)</h4>
-                    <canvas id="live_traffic_chart" height="100"></canvas>
+                    <h4 class="header-title">시스템 리소스 변화 추이 (최근 1분)</h4>
+                    <canvas id="resourceChart" style="width: 100%; height: 300px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="header-title">시스템 활동 로그</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="bg-light">
+                            <tr>
+                                <th>시간</th>
+                                <th>구분</th>
+                                <th>메시지</th>
+                                <th>응답시간</th>
+                            </tr>
+                            </thead>
+                            <tbody id="monitoring-log">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
 <script>
-    // CPU 게이지 예시
-    var cpuConfig = {
-        type: "gauge",
-        series: [{ values: [65] }] // 서버에서 받은 실시간 값
-    };
-    zingchart.render({ id: 'cpu_gauge', data: cpuConfig, height: '100%', width: '100%' });
+    // 차트 설정
+    const ctx = document.getElementById('resourceChart').getContext('2d');
+    const resourceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [], // 시간 데이터
+            datasets: [{
+                label: 'CPU (%)',
+                borderColor: 'rgb(54, 162, 235)',
+                data: [],
+                fill: false
+            }, {
+                label: 'Memory (%)',
+                borderColor: 'rgb(255, 159, 64)',
+                data: [],
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true, max: 100 } }
+        }
+    });
 
-    // 메모리 게이지 예시
-    var memConfig = {
-        type: "gauge",
-        series: [{ values: [42] }]
-    };
-    zingchart.render({ id: 'memory_gauge', data: memConfig, height: '100%', width: '100%' });
+    // 데이터 업데이트 함수
+    function fetchMonitoringData() {
+        // 관리자 서버 내부의 중계 API 호출
+        $.get('/admin/api/monitoring/stats', function(data) {
+            const now = new Date().toLocaleTimeString();
+
+            // 1. 상단 텍스트 업데이트
+            $('#server-status').text(data.status);
+            $('#active-users').text(data.activeUsers + '명');
+            $('#cpu-usage').text(data.cpuUsage + '%');
+            $('#mem-usage').text(data.memoryUsage + '%');
+
+            // 2. 차트 데이터 추가
+            if (resourceChart.data.labels.length > 20) {
+                resourceChart.data.labels.shift();
+                resourceChart.data.datasets[0].data.shift();
+                resourceChart.data.datasets[1].data.shift();
+            }
+            resourceChart.data.labels.push(now);
+            resourceChart.data.datasets[0].data.push(data.cpuUsage);
+            resourceChart.data.datasets[1].data.push(data.memoryUsage);
+            resourceChart.update();
+
+            // 3. 로그 추가
+            const logHtml = `<tr>
+                <td>${now}</td>
+                <td><span class="badge badge-success">INFO</span></td>
+                <td>Main Server Heartbeat - OK</td>
+                <td>${data.responseTime}ms</td>
+            </tr>`;
+            $('#monitoring-log').prepend(logHtml);
+            if($('#monitoring-log tr').length > 10) $('#monitoring-log tr:last').remove();
+        });
+    }
+
+    // 3초마다 갱신
+    setInterval(fetchMonitoringData, 3000);
 </script>
-    <!-- offset area end -->
-    <!-- jquery latest version -->
-    <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
-    <!-- bootstrap 4 js -->
-    <script src="/assets/js/popper.min.js"></script>
-    <script src="/assets/js/bootstrap.min.js"></script>
-    <script src="/assets/js/owl.carousel.min.js"></script>
-    <script src="/assets/js/metisMenu.min.js"></script>
-    <script src="/assets/js/jquery.slimscroll.min.js"></script>
-    <script src="/assets/js/jquery.slicknav.min.js"></script>
-
-    <!-- start chart js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
-    <!-- start highcharts js -->
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <!-- start zingchart js -->
-    <script src="https://cdn.zingchart.com/zingchart.min.js"></script>
-    <script>
-        zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
-        ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9", "ee6b7db5b51705a13dc2339db3edaf6d"];
-    </script>
-    <!-- all line chart activation -->
-    <script src="/assets/js/line-chart.js"></script>
-    <!-- all bar chart activation -->
-    <script src="/assets/js/bar-chart.js"></script>
-    <!-- all pie chart -->
-    <script src="/assets/js/pie-chart.js"></script>
-    <!-- others plugins -->
-    <script src="/assets/js/plugins.js"></script>
-    <script src="/assets/js/scripts.js"></script>
 </body>
 </html>

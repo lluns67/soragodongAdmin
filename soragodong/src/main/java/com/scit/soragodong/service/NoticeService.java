@@ -3,8 +3,10 @@ package com.scit.soragodong.service;
 import com.scit.soragodong.domain.dto.FileRes;
 import com.scit.soragodong.domain.dto.NoticeDto;
 import com.scit.soragodong.domain.entity.Notice;
+import com.scit.soragodong.domain.entity.Notification;
 import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.repository.NoticeRepository;
+import com.scit.soragodong.repository.NotificationRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ public class NoticeService {
 	
 	private final NoticeRepository noticeRepository;
 	private final FileService fileService; // 기존 파일 서비스 활용
+    private final NotificationRepository notificationRepository;
 	
 	/**
 	 * 공지사항 등록
@@ -33,7 +36,18 @@ public class NoticeService {
 		
 		// save를 먼저 해야 DB에서 noticeIdx(Auto Increment)가 생성됩니다.
 		Notice savedNotice = noticeRepository.save(notice);
-		
+
+        //Notification DB에 저장용 USER_IDX 는 0으로 설정함
+        Notification notification = Notification.builder()
+                .userIdx(0L)
+                .notiType("ADMIN_NOTICE")
+                .refId(Long.valueOf(savedNotice.getNoticeIdx()))
+                .message(dto.getTitle())
+                .build();
+
+        notificationRepository.save(notification);
+
+
 		// 2. 파일이 있으면 업로드 진행
 		if (files != null && !files.isEmpty() && !files.get(0).isEmpty()) {
 			// FileRefType에 NOTICE가 없다면 추가 필요

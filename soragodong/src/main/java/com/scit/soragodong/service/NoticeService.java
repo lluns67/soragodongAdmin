@@ -5,7 +5,6 @@ import com.scit.soragodong.domain.dto.NoticeDto;
 import com.scit.soragodong.domain.entity.Notice;
 import com.scit.soragodong.domain.entity.Notification;
 import com.scit.soragodong.domain.enums.FileRefType;
-import com.scit.soragodong.domain.enums.NotificationType;
 import com.scit.soragodong.repository.NoticeRepository;
 import com.scit.soragodong.repository.NotificationRepository;
 import jakarta.transaction.Transactional;
@@ -98,17 +97,19 @@ public class NoticeService {
 		Notice notice = noticeRepository.findById(noticeIdx)
 				.orElseThrow(() -> new IllegalArgumentException("공지사항 없음: " + noticeIdx));
 		notice.setIsUse(false);
+		noticeRepository.save(notice);
 		
 		// 2. 연결된 알림들 찾기 (NOTICE 타입으로 검색)
 		// 팁: ADMIN_NOTICE 대신 실제 DB에 저장된 타입(NOTICE 등)을 사용하세요.
 		List<Notification> notifications = notificationRepository.findByNotiTypeAndRefId(
-				NotificationType.ADMIN_NOTICE, noticeIdx);
+				"ADMIN_NOTICE", Long.valueOf(noticeIdx));
 		
 		log.info("[조회 결과] 찾은 알림 개수: {}", notifications.size());
 		
 		if (!notifications.isEmpty()) {
 			for (Notification notification : notifications) {
 				notification.setIsUse(false);
+				notificationRepository.save(notification);
 				log.info("[알림 삭제 성공] 알림 PK: {}", notification.getNotiIdx());
 			}
 		} else {

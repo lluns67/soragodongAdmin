@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -31,6 +32,8 @@ public class AdminNoticeController {
 	private final FileService fileService;
 	private final NoticeRepository noticeRepository;
 	private final FileRepository fileRepository;
+	private final RestTemplate restTemplate;
+	
 	
 	@PostMapping("/write")
 	public String writeNotice(NoticeDto noticeDto,
@@ -40,6 +43,7 @@ public class AdminNoticeController {
 			
 			// 서비스에서 저장과 파일 업로드를 한 번에 처리하도록 호출
 			noticeService.writeNotice(noticeDto, files);
+
 			rttr.addFlashAttribute("message", "공지사항이 등록되었습니다.");
 		} catch (Exception e){
 			rttr.addFlashAttribute("error", "공지사항 등록 실패: " + e.getMessage());

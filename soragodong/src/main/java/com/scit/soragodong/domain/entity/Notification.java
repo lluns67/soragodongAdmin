@@ -38,5 +38,9 @@ public class Notification {
     @Column(name = "CREATED_AT", updatable = false,
             columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
+	
+	@Builder.Default
+	@Column(name = "IS_USE")
+	private Boolean isUse = true;
 
 }

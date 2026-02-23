@@ -5,18 +5,22 @@ import com.scit.soragodong.domain.dto.NoticeDto;
 import com.scit.soragodong.domain.entity.Notice;
 import com.scit.soragodong.domain.entity.Notification;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.domain.enums.NotificationType;
 import com.scit.soragodong.repository.NoticeRepository;
 import com.scit.soragodong.repository.NotificationRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class NoticeService {
 	
 	private final NoticeRepository noticeRepository;
@@ -43,6 +47,8 @@ public class NoticeService {
                 .notiType("ADMIN_NOTICE")
                 .refId(Long.valueOf(savedNotice.getNoticeIdx()))
                 .message(dto.getTitle())
+				.isRead(false)
+				.createdAt(LocalDateTime.now())
                 .build();
 
         notificationRepository.save(notification);
@@ -86,10 +92,27 @@ public class NoticeService {
 	
 	@Transactional
 	public void deleteNotice(Integer noticeIdx) {
-		Notice notice = noticeRepository.findById(noticeIdx)
-				.orElseThrow(() -> new IllegalArgumentException("해당 공지사항이 존재하지 않습니다."));
+		log.info("[삭제 요청] 공지사항 ID(refId): {}", noticeIdx);
 		
-		// 논리 삭제 처리
+		// 1. 공지사항 원본 삭제
+		Notice notice = noticeRepository.findById(noticeIdx)
+				.orElseThrow(() -> new IllegalArgumentException("공지사항 없음: " + noticeIdx));
 		notice.setIsUse(false);
+		
+		// 2. 연결된 알림들 찾기 (NOTICE 타입으로 검색)
+		// 팁: ADMIN_NOTICE 대신 실제 DB에 저장된 타입(NOTICE 등)을 사용하세요.
+		List<Notification> notifications = notificationRepository.findByNotiTypeAndRefId(
+				NotificationType.ADMIN_NOTICE, noticeIdx);
+		
+		log.info("[조회 결과] 찾은 알림 개수: {}", notifications.size());
+		
+		if (!notifications.isEmpty()) {
+			for (Notification notification : notifications) {
+				notification.setIsUse(false);
+				log.info("[알림 삭제 성공] 알림 PK: {}", notification.getNotiIdx());
+			}
+		} else {
+			log.warn("[주의] 삭제할 알림을 찾지 못했습니다. refId와 타입을 확인하세요.");
+		}
 	}
 }

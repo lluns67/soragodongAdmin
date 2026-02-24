@@ -1,10 +1,11 @@
 package com.scit.soragodong.service;
 
-import com.scit.soragodong.domain.dto.FileRes;
 import com.scit.soragodong.domain.dto.NoticeDto;
+import com.scit.soragodong.domain.entity.FileGrp;
 import com.scit.soragodong.domain.entity.Notice;
 import com.scit.soragodong.domain.entity.Notification;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.NoticeRepository;
 import com.scit.soragodong.repository.NotificationRepository;
 import jakarta.transaction.Transactional;
@@ -15,6 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +28,8 @@ public class NoticeService {
 	private final NoticeRepository noticeRepository;
 	private final FileService fileService; // 기존 파일 서비스 활용
     private final NotificationRepository notificationRepository;
-	
+
+    private final FileGrpRepository fileGrpRepository;
 	/**
 	 * 공지사항 등록
 	 */
@@ -54,15 +58,33 @@ public class NoticeService {
 
 
 		// 2. 파일이 있으면 업로드 진행
-		if (files != null && !files.isEmpty() && !files.get(0).isEmpty()) {
-			// FileRefType에 NOTICE가 없다면 추가 필요
-			List<FileRes> uploaded = fileService.upload(
-					FileRefType.NOTICE,
-					notice.getNoticeIdx(),
-					files
-			);
-			
-		}
+        // MultipartFile 중 비어있지 않은 파일만 필터링
+        List<MultipartFile> validFiles = files == null ? null : files.stream()
+                .filter(file -> !file.isEmpty())
+                .collect(Collectors.toList());
+
+        if (validFiles != null && !validFiles.isEmpty()) {
+            // 파일 업로드 (FileGrp 생성 포함)
+            fileService.upload(FileRefType.NOTICE, savedNotice.getNoticeIdx(), validFiles);
+
+            // 생성된 FileGrp 조회
+            Optional<FileGrp> fileGrpOpt = fileGrpRepository.findByRefTypeAndRefId(FileRefType.NOTICE,
+                    savedNotice.getNoticeIdx());
+
+            if (fileGrpOpt.isPresent()) {
+                FileGrp fileGrp = fileGrpOpt.get();
+                log.info("FileGrp found: {}", fileGrp.getFileGrpIdx());
+
+                // fileGrpIdx 설정
+                savedNotice.setFileGrpIdx(fileGrp.getFileGrpIdx());
+
+                // 변경사항 강제 저장 (UPDATE 쿼리 유발)
+                savedNotice = noticeRepository.saveAndFlush(savedNotice);
+                log.info("Board updated with FileGrp");
+            } else {
+                log.warn("FileGrp not found after upload");
+            }
+        }
 		
 		
 	}

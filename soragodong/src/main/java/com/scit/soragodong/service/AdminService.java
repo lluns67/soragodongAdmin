@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -219,4 +220,51 @@ public class AdminService {
         }
     }
 
+
+
+    public List<AdminPostDto> getPostByTypeAndIdx(String targetType, Integer postIdx) {
+        // 1. 커뮤니티 게시글(BOARD) 조회 및 변환
+        if ("BOARD".equalsIgnoreCase(targetType)) {
+            return boardRepository.findById(postIdx).stream()
+                    .map(entity -> BoardDto.builder()
+                            .boardIdx(entity.getBoardIdx())
+                            .userIdx(entity.getUser().getUserIdx())
+                            .boardCategory(entity.getBoardCategory())
+                            .boardTitle(entity.getBoardTitle())
+                            .boardContent(entity.getBoardContent())
+                            .userNickname(entity.getUser().getUserNickname())
+                            .isUse(entity.getIsUse())
+                            .likeCount(entity.getLikeCount())
+                            .viewCount(entity.getViewCount())
+                            .createdAt(entity.getCreateDate())
+                            .build())
+                    .map(AdminPostDto::fromBoard)
+                    .toList();
+        }
+
+        // 2. 중고거래 게시글(USED_ITEM) 조회 및 변환
+        else if ("USED_ITEM".equalsIgnoreCase(targetType)) {
+            return usedRepository.findById(postIdx).stream()
+                    .map(entity -> {
+                        UsedDto u = new UsedDto(
+                                entity.getUsedIdx(),
+                                entity.getUsedTitle(),
+                                entity.getUsedContent(),
+                                entity.getUsedPrice(),
+                                entity.getUsedState(),
+                                entity.getTradingLoc(),
+                                entity.getViewCount(),
+                                entity.getCreatedAt(),
+                                entity.getUpdatedAt(),
+                                entity.getIsUse(),
+                                entity.getUser().getUserIdx()
+                        );
+                        // UsedDto와 닉네임을 함께 넘겨 변환
+                        return AdminPostDto.fromUsed(u, entity.getUser().getUserNickname());
+                    })
+                    .toList();
+        }
+
+        return Collections.emptyList();
+    }
 }

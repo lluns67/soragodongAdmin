@@ -209,31 +209,35 @@ public class AdminController {
 
         return "admin/user-banned";
 	}
-	
-	
-	// 신고 조회
-	@GetMapping("total-report")
-	public String totalReport(){
-		return "admin/total-report";
-	}
-	// 신고 처리
-	@GetMapping("waiting-report")
-	public String waitingReport(){
-		return "admin/waiting-report";
-	}
 
-    @GetMapping("total-post")
-    public String totalPost(@RequestParam(value = "userIdx", required = false) Integer userIdx, Model model) {
+
+
+
+    @GetMapping("/total-post")
+    public String totalPost(
+            @RequestParam(value = "userIdx", required = false) Integer userIdx,
+            @RequestParam(value = "postIdx", required = false) Integer postIdx, // [추가] 게시물 번호 파라미터
+            @RequestParam(value = "targetType", required = false) String targetType,
+            Model model) {
+
         List<AdminPostDto> posts;
-        if (userIdx != null) {
-            // 특정 유저의 게시물만 조회
+
+        if (postIdx != null && targetType != null) {
+            // 1. 신고 대상 유형에 따라 다른 Repository 조회 (BOARD / USED_ITEM)
+            posts = adminService.getPostByTypeAndIdx(targetType, postIdx);
+        } else if (userIdx != null) {
+            // 2. 기존 로직: 특정 유저의 게시물 조회
             posts = adminService.getUserTotalPosts(userIdx);
         } else {
-            // 전체 게시물 조회
+            // 3. 기존 로직: 전체 게시물 조회
             posts = adminService.findAllPosts();
         }
+
         model.addAttribute("postList", posts);
-        return "admin/total-post";}
+        return "admin/total-post";
+    }
+
+
 
 
     @GetMapping("deleted-post")

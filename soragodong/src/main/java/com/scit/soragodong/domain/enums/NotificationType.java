@@ -10,5 +10,6 @@ public enum NotificationType {
     COMMUNITY_LIKE,      // 커뮤니티 좋아요
     COMMENT,              // 커뮤니티 댓글
 	ADMIN_NOTICE,
-	NOTICE
+	NOTICE,                //공지
+    REPORT_RESULT           //신고 결과
 }

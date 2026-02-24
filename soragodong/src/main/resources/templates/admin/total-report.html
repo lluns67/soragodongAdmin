@@ -1,8 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html class="no-js" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>신고 관리 - 소라고동</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/png" href="/assets/images/icon/favicon.ico">
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
@@ -22,61 +21,56 @@
     <script src="/assets/js/vendor/modernizr-2.8.3.min.js"></script>
 </head>
 <body>
-<div class="main-content-inner">
-    <div class="row">
-        <div class="col-12 mt-5">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="header-title mb-0">전체 신고 처리 목록</h4>
-                        <a href="/admin/index2" class="btn btn-outline-secondary btn-sm">
-                            <i class="fa fa-home"></i> 대시보드로 돌아가기
-                        </a>
-                    </div>
-
-                    <div class="single-table">
-                        <div class="table-responsive">
-                            <table class="table table-hover text-center">
-                                <thead class="text-uppercase bg-light">
-                                <tr>
-                                    <th scope="col">신고번호</th>
-                                    <th scope="col">유형</th>
-                                    <th scope="col">신고 대상(ID)</th>
-                                    <th scope="col">신고자</th>
-                                    <th scope="col">신고 사유</th>
-                                    <th scope="col">신고일</th>
-                                    <th scope="col">처리 상태</th>
-                                    <th scope="col">관리</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
-                                    <th scope="row">REP_001</th>
-                                    <td>게시글</td>
-                                    <td><a href="#" class="text-primary">post_123</a></td>
-                                    <td>patrick_star</td>
-                                    <td>부적절한 홍보성 문구</td>
-                                    <td>2026-02-11</td>
-                                    <td><span class="badge badge-warning">대기 중</span></td>
-                                    <td>
-                                        <button class="btn btn-xs btn-info" onclick="openReportModal('REP_001')">상세보기</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">REP_002</th>
-                                    <td>댓글</td>
-                                    <td><a href="#" class="text-primary">comment_45</a></td>
-                                    <td>squidward_tentacles</td>
-                                    <td>욕설 및 비방</td>
-                                    <td>2026-02-12</td>
-                                    <td><span class="badge badge-success">처리 완료</span></td>
-                                    <td>
-                                        <button class="btn btn-xs btn-secondary" disabled>처리 완료</button>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
+<div class="page-container">
+    <div class="main-content-inner">
+        <div class="card mt-5">
+            <div class="card-body">
+                <h4 class="header-title">신고 내역 관리</h4>
+                <div class="single-table">
+                    <div class="table-responsive">
+                        <table class="table table-hover text-center">
+                            <thead class="text-uppercase bg-light">
+                            <tr>
+                                <th>번호</th>
+                                <th>대상 유형</th>
+                                <th>신고자</th>
+                                <th>사유</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="report : ${reports}"
+                                th:style="${report.status == 'PROCESSING' ? 'background-color: #fff9e6;' : ''}">
+                                <td th:text="${report.reportIdx}">1</td>
+                                <td>
+                                    <span class="badge badge-secondary" th:text="${report.targetType}">BOARD</span>
+                                    <small th:text="'(ID: ' + ${report.targetId} + ')'"></small>
+                                    <a th:href="@{/admin/total-post(postIdx=${report.targetId}, targetType=${report.targetType})}"
+                                       target="_blank"
+                                       class="btn btn-xs btn-outline-primary ml-2">
+                                        <i class="ti-search"></i> 게시물 확인
+                                    </a>
+                                </td>
+                                <td th:text="${report.reporterIdx}">User9</td>
+                                <td th:text="${report.reason}">부적절한 내용</td>
+                                <td>
+                                            <span th:class="${report.status == 'PROCESSING' ? 'status-p bg-warning' :
+                                                            (report.status == 'APPROVED' ? 'status-p bg-success' : 'status-p bg-danger')}"
+                                                  th:text="${report.status}">PROCESSING</span>
+                                </td>
+                                <td>
+                                    <div th:if="${report.status == 'PROCESSING'}">
+                                        <button type="button" class="btn btn-primary btn-xs mr-2"
+                                                th:onclick="openProcessModal([[${report.reportIdx}]], 'APPROVED')">승인</button>
+                                        <button type="button" class="btn btn-danger btn-xs"
+                                                th:onclick="openProcessModal([[${report.reportIdx}]], 'REJECTED')">반려</button>
+                                    </div>
+                                    <span th:unless="${report.status == 'PROCESSING'}" class="text-muted">처리 완료</span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -88,120 +82,66 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">신고 상세 내역</h5>
+                <h5 class="modal-title" id="modalTitle">신고 처리</h5>
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body">
-                <h6>신고 상세 사유</h6>
-                <div class="p-3 bg-light rounded mt-2" id="modal-report-content">
-                </div>
-                <hr>
+                <input type="hidden" id="modalReportIdx">
+                <input type="hidden" id="modalStatus">
                 <div class="form-group">
-                    <label for="report-action">처리 선택</label>
-                    <select class="form-control" id="report-action">
-                        <option value="dismiss">반려 (허위 신고)</option>
-                        <option value="delete">내용 삭제</option>
-                        <option value="ban">내용 삭제 및 유저 정지</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="report-memo">관리자 메모 (사유)</label>
-                    <textarea class="form-control" id="report-memo" rows="3" placeholder="처리 결과를 기록하세요."></textarea>
+                    <label for="modalProcessNote">처리 결과 메시지 (사용자에게 발송됨)</label>
+                    <textarea class="form-control" id="modalProcessNote" rows="5"
+                              placeholder="신고자에게 전달할 처리 사유를 입력하세요."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
-                <button type="button" class="btn btn-danger" onclick="submitReportAction()">처리 적용</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="submitReportProcess()">처리 확정</button>
             </div>
         </div>
     </div>
 </div>
+
+<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
+<script src="/assets/js/bootstrap.min.js"></script>
 <script>
-    function openReportModal(reportId) {
-    // 실제 환경에서는 여기서 AJAX를 통해 서버에서 상세 데이터를 가져옵니다.
-    // 현재는 예시를 위해 테이블의 데이터를 활용하거나 가상 데이터를 세팅합니다.
-
-    // 예시 데이터 (나중에 서버 API 연결 시 이 부분을 AJAX 성공 콜백에 넣으세요)
-    const mockData = {
-        id: reportId,
-        type: "게시글",
-        target: "post_123",
-        reason: "부적절한 홍보성 문구",
-        content: "이 사용자는 매크로를 사용하여 1분마다 동일한 광고성 링크를 게시판에 도배하고 있습니다. 커뮤니티 가이드라인 위반입니다.",
-        date: "2026-02-11"
-    };
-
-    // 모달 내 텍스트 변경
-    $('#modal-report-content').text(mockData.content);
-    $('.modal-title').text('신고 상세 내역 - ' + mockData.id);
-
-    // 관리자 메모 칸 비우기
-    $('#report-memo').val('');
-
-    // 모달 표시
-    $('#reportModal').modal('show');
-}
-
-// 2. 처리 적용 버튼 클릭 시 실행
-function submitReportAction() {
-    const action = $('#report-action').val(); // dismiss, delete, ban
-    const memo = $('#report-memo').val();
-
-    if(!memo) {
-        alert("관리자 메모를 입력해주세요.");
-        return;
+    // 모달 열기
+    function openProcessModal(idx, status) {
+        $('#modalReportIdx').val(idx);
+        $('#modalStatus').val(status);
+        $('#modalTitle').text(status === 'APPROVED' ? '신고 승인 및 처리' : '신고 반려 처리');
+        $('#modalProcessNote').val(''); // 이전 입력값 초기화
+        $('#reportModal').modal('show');
     }
 
-    if(confirm("해당 처리를 적용하시겠습니까?")) {
-        // 서버로 처리 결과 전송 (AJAX)
-        console.log("처리 내용:", { action, memo });
+    // 처리 결과 전송 (AJAX)
+    function submitReportProcess() {
+        const reportIdx = $('#modalReportIdx').val();
+        const status = $('#modalStatus').val();
+        const processNote = $('#modalProcessNote').val();
 
-        /*
+        if(!processNote.trim()) {
+            alert("처리 사유를 입력해주세요.");
+            return;
+        }
+
         $.ajax({
-            url: '/admin/api/report/process',
-            method: 'POST',
-            data: { action: action, memo: memo },
-            success: function() {
-                alert("처리가 완료되었습니다.");
+            url: '/admin/report/process',
+            type: 'POST',
+            data: {
+                reportIdx: reportIdx,
+                status: status,
+                processNote: processNote
+            },
+            success: function(res) {
+                alert('처리가 완료되었습니다. 신고자에게 알림이 전송됩니다.');
                 location.reload();
+            },
+            error: function(err) {
+                alert('서버 통신 중 오류가 발생했습니다.');
             }
         });
-        */
-
-        alert("처리가 완료되었습니다. (임시)");
-        $('#reportModal').modal('hide');
     }
-}
 </script>
-<!-- offset area end -->
-<!-- jquery latest version -->
-<script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
-<!-- bootstrap 4 js -->
-<script src="/assets/js/popper.min.js"></script>
-<script src="/assets/js/bootstrap.min.js"></script>
-<script src="/assets/js/owl.carousel.min.js"></script>
-<script src="/assets/js/metisMenu.min.js"></script>
-<script src="/assets/js/jquery.slimscroll.min.js"></script>
-<script src="/assets/js/jquery.slicknav.min.js"></script>
-
-<!-- start chart js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
-<!-- start highcharts js -->
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<!-- start zingchart js -->
-<script src="https://cdn.zingchart.com/zingchart.min.js"></script>
-<script>
-    zingchart.MODULESDIR = "https://cdn.zingchart.com/modules/";
-    ZC.LICENSE = ["569d52cefae586f634c54f86dc99e6a9", "ee6b7db5b51705a13dc2339db3edaf6d"];
-</script>
-<!-- all line chart activation -->
-<script src="/assets/js/line-chart.js"></script>
-<!-- all bar chart activation -->
-<script src="/assets/js/bar-chart.js"></script>
-<!-- all pie chart -->
-<script src="/assets/js/pie-chart.js"></script>
-<!-- others plugins -->
-<script src="/assets/js/plugins.js"></script>
-<script src="/assets/js/scripts.js"></script>
 </body>
 </html>

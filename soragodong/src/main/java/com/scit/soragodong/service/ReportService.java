@@ -8,6 +8,7 @@ import com.scit.soragodong.repository.UsedRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,7 +25,10 @@ public class ReportService {
     private final BoardRepository boardRepository;
     private final UsedRepository usedRepository;
     private final RestTemplate restTemplate; // 본 서버 통신용
-
+	
+	@Value("${external.main-server.url}")
+	private String mainServerUrl;
+	
     /**
      * 전체 신고 목록 조회 (최신순)
      */
@@ -104,15 +108,18 @@ public class ReportService {
      * SSE 알림 전송 공통 메서드
      */
     private void sendSseNotification(Integer userIdx, String message) {
-        if (userIdx == null) return;
+		
+		String fullUrl = mainServerUrl + "/api/internal/broadcast";
+		
+		if (userIdx == null) return;
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("userIdx", userIdx);
         payload.put("message", message);
 
         try {
-            String mainServerUrl = "http://localhost:8080/api/internal/broadcast";
-            restTemplate.postForEntity(mainServerUrl, payload, String.class);
+            
+            restTemplate.postForEntity(fullUrl, payload, String.class);
         } catch (Exception e) {
             log.error("SSE 알림 전송 실패 (userIdx: {}): {}", userIdx, e.getMessage());
         }

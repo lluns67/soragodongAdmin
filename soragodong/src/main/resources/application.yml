@@ -84,6 +84,12 @@ server:
     include-message: always
     include-stacktrace: on_param
 
+# 커스텀 설정 추가
+external:
+  main-server:
+    # .env에 MAIN_SERVER_URL이 있으면 쓰고, 없으면 기본값으로 localhost:8080 사용
+    url: ${MAIN_SERVER_URL:http://localhost:8080}
+
 logging:
   level:
     root: INFO
@@ -95,3 +101,4 @@ logging:
     name: logs/soragodong.log
     max-size: 10MB
     max-history: 30
+

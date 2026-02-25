@@ -1,6 +1,7 @@
 package com.scit.soragodong.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,16 +18,23 @@ import java.util.Map;
 public class MonitoringApiController {
 
     private final RestTemplate restTemplate;
+	
+	// yml의 설정을 상수로 주입받음
+	@Value("${external.main-server.url}")
+	private String mainServerUrl;
 
     // 본 서버의 내부 모니터링 주소 (예: http://192.168.0.100:8080/api/internal/stats)
-    private final String MAIN_SERVER_URL = "http://localhost:8080/api/internal/stats";
+    
 
     @GetMapping("stats")
     public ResponseEntity<?> getRemoteStats() {
+		
+		String fullUrl = mainServerUrl + "/api/internal/stats";
+		
         try {
             // 1. 본 서버로 데이터 요청 (GET 방식)
             // 본 서버에서 Map<String, Object> 형태의 JSON을 반환한다고 가정합니다.
-            ResponseEntity<Map> response = restTemplate.getForEntity(MAIN_SERVER_URL, Map.class);
+            ResponseEntity<Map> response = restTemplate.getForEntity(fullUrl, Map.class);
 
             if (response.getStatusCode().is2xxSuccessful()) {
                 Map<String, Object> body = response.getBody();

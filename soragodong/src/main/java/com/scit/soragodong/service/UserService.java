@@ -52,4 +52,12 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다. IDX: " + userIdx));
         user.setWarningCount(count);
     }
+	
+	public void updateMetrics(Integer userIdx, Integer mannerScore, Integer warningCount) {
+		Users user = userRepository.findById(userIdx)
+				.orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다. IDX: " + userIdx));
+		user.setWarningCount(warningCount);
+		user.setMannerScore(mannerScore);
+		userRepository.save(user);
+	}
 }

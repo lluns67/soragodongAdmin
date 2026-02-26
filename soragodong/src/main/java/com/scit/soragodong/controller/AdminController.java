@@ -186,11 +186,13 @@ public class AdminController {
     }
 
     // 2. 경고 횟수 수정 API
-    @PatchMapping("/api/users/{userIdx}/warning")
+    @PatchMapping("/api/users/{userIdx}/metrics")
     @ResponseBody
-    public ResponseEntity<Void> updateWarning(@PathVariable Integer userIdx, @RequestParam Integer count) {
+    public ResponseEntity<Void> updateMetrics(@PathVariable Integer userIdx,
+											  @RequestParam Integer mannerScore,
+											  @RequestParam Integer warningCount) {
         // userRepository 등을 통해 직접 해당 유저의 warningCount 업데이트
-        userService.updateWarningCount(userIdx, count);
+        userService.updateMetrics(userIdx, mannerScore, warningCount);
         return ResponseEntity.ok().build();
     }
 	

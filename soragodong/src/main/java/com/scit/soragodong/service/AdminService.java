@@ -267,4 +267,78 @@ public class AdminService {
 
         return Collections.emptyList();
     }
+	
+	public List<AdminPostDto> searchPosts(String targetType, String searchWord) {
+		List<AdminPostDto> allPosts = new ArrayList<>();
+		
+		// 검색어가 비어있는 경우 처리 (null 방지)
+		boolean hasSearchWord = (searchWord != null && !searchWord.trim().isEmpty());
+		
+		// 1. 커뮤니티(BOARD) 조회
+		if (targetType == null || "community".equals(targetType)) {
+			List<Board> boards;
+			if (hasSearchWord) {
+				// 검색어가 있을 때
+				boards = boardRepository.searchByWord(searchWord);
+			} else {
+				// 검색어 없이 카테고리만 선택했을 때
+				boards = boardRepository.findAll();
+			}
+			
+			allPosts.addAll(boards.stream()
+					.map(entity -> BoardDto.builder()
+							.boardIdx(entity.getBoardIdx())
+							.userIdx(entity.getUser().getUserIdx())
+							.boardCategory(entity.getBoardCategory())
+							.boardTitle(entity.getBoardTitle())
+							.boardContent(entity.getBoardContent())
+							.userNickname(entity.getUser().getUserNickname())
+							.isUse(entity.getIsUse())
+							.likeCount(entity.getLikeCount())
+							.viewCount(entity.getViewCount())
+							.createdAt(entity.getCreateDate())
+							.build())
+					.map(AdminPostDto::fromBoard)
+					.toList());
+		}
+		
+		// 2. 중고거래(USED_ITEM) 조회
+		if (targetType == null || "market".equals(targetType)) {
+			List<Used> usedItems;
+			if (hasSearchWord) {
+				// 검색어가 있을 때
+				usedItems = usedRepository.searchByWord(searchWord);
+			} else {
+				// 검색어 없이 카테고리만 선택했을 때
+				usedItems = usedRepository.findAll();
+			}
+			
+			allPosts.addAll(usedItems.stream()
+					.map(entity -> {
+						UsedDto u = new UsedDto(
+								entity.getUsedIdx(),
+								entity.getUsedTitle(),
+								entity.getUsedContent(),
+								entity.getUsedPrice(),
+								entity.getUsedState(),
+								entity.getTradingLoc(),
+								entity.getViewCount(),
+								entity.getCreatedAt(),
+								entity.getUpdatedAt(),
+								entity.getIsUse(),
+								entity.getUser().getUserIdx()
+						);
+						return AdminPostDto.fromUsed(u, entity.getUser().getUserNickname());
+					})
+					.toList());
+		}
+		
+		// 최신순 정렬
+		allPosts.sort((p1, p2) -> {
+			if (p1.getDate() == null || p2.getDate() == null) return 0;
+			return p2.getDate().compareTo(p1.getDate());
+		});
+		
+		return allPosts;
+	}
 }

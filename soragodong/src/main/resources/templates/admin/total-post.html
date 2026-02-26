@@ -2,7 +2,7 @@
 <html xmlns:th="thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>게시물 관리</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" type="image/png" href="/assets/images/icon/favicon.ico">
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="/assets/css/responsive.css">
     <!-- modernizr css -->
     <script src="/assets/js/vendor/modernizr-2.8.3.min.js"></script>
+    <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
 </head>
 <body>
 <div class="main-content-inner">
@@ -28,7 +29,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="header-title mb-0">전체 게시물 관리</h4>
+                        <h4 class="header-title mb-0">게시물 관리</h4>
                         <a href="/admin/index2" class="btn btn-outline-secondary btn-sm">
                             <i class="fa fa-home"></i> 대시보드로 돌아가기
                         </a>
@@ -37,8 +38,8 @@
                     <div class="row mb-3">
                         <div class="col-md-3">
                             <select class="custom-select" id="post-category-filter">
-                                <option selected>모든 카테고리</option>
-                                <option value="news">소라고동 소식</option>
+                                <option value="ALL" selected>모든 카테고리</option>
+
                                 <option value="market">중고장터</option>
                                 <option value="community">자유게시판</option>
                             </select>
@@ -47,7 +48,7 @@
                             <input type="text" class="form-control" placeholder="제목, 내용 또는 작성자 검색..." id="post-search">
                         </div>
                         <div class="col-md-2">
-                            <button class="btn btn-primary btn-block">검색</button>
+                            <button class="btn btn-primary btn-block" id="btn-post-search">검색</button>
                         </div>
                     </div>
 
@@ -212,10 +213,32 @@
         }
     });
 }
+
+    $(document).ready(function() {
+    // 검색 버튼 클릭 이벤트
+    $('#btn-post-search').on('click', function() {
+        const type = $('#post-category-filter').val(); // ALL, 커뮤니티, 중고거래
+        const searchWord = $('#post-search').val().trim();
+
+        // 파라미터를 조립하여 페이지 이동
+        let url = '/admin/total-post?';
+        if (type !== 'ALL') url += 'targetType=' + encodeURIComponent(type) + '&';
+        if (searchWord) url += 'searchWord=' + encodeURIComponent(searchWord);
+
+        location.href = url;
+    });
+
+    // 엔터키 입력 시 검색 실행
+    $('#post-search').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#btn-post-search').click();
+        }
+    });
+});
 </script>
 <!-- offset area end -->
 <!-- jquery latest version -->
-    <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
+
     <!-- bootstrap 4 js -->
     <script src="/assets/js/popper.min.js"></script>
     <script src="/assets/js/bootstrap.min.js"></script>

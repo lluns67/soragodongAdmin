@@ -220,6 +220,7 @@ public class AdminController {
             @RequestParam(value = "userIdx", required = false) Integer userIdx,
             @RequestParam(value = "postIdx", required = false) Integer postIdx, // [추가] 게시물 번호 파라미터
             @RequestParam(value = "targetType", required = false) String targetType,
+			@RequestParam(value = "searchWord", required = false) String searchWord, // [추가] 검색어
             Model model) {
 
         List<AdminPostDto> posts;
@@ -230,6 +231,9 @@ public class AdminController {
         } else if (userIdx != null) {
             // 2. 기존 로직: 특정 유저의 게시물 조회
             posts = adminService.getUserTotalPosts(userIdx);
+		} else if (searchWord != null || targetType != null) {
+			// 검색어와 타입을 포함한 조회 로직 호출
+			posts = adminService.searchPosts(targetType, searchWord);
         } else {
             // 3. 기존 로직: 전체 게시물 조회
             posts = adminService.findAllPosts();

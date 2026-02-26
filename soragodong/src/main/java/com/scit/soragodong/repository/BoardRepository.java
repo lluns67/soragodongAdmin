@@ -4,6 +4,8 @@ import com.scit.soragodong.domain.entity.Board;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,4 +29,7 @@ public interface BoardRepository extends JpaRepository<Board, Integer> {
             String category1, String title, String category2, String content, Pageable pageable);
 
     List<Board> findByUser_UserIdx(Integer userIdx);
+	
+	@Query("SELECT b FROM Board b WHERE b.boardTitle LIKE %:word% OR b.boardContent LIKE %:word% OR b.user.userNickname LIKE %:word%")
+	List<Board> searchByWord(@Param("word") String word);
 }

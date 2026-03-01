@@ -33,6 +33,17 @@ public class AdminPostController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("fail: " + e.getMessage());
         }
     }
+    @PostMapping("/toggle-reply-status")
+    public ResponseEntity<String> toggleReplyStatus(
+            @RequestParam("replyIdx") Integer replyIdx) {
+        try {
+            adminService.toggleReplyStatus(replyIdx);
+            return ResponseEntity.ok("success");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("fail: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/detail")
     public ResponseEntity<AdminPostDto> getPostDetail(
             @RequestParam("idx") Integer idx,

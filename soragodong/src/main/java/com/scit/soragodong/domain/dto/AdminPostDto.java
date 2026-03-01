@@ -20,6 +20,7 @@ public class AdminPostDto {
     private Integer likeCount;
     private Integer fileGrpIdx;
     private java.util.List<String> imagePaths;
+    private java.util.List<BoardReplyDto> replies;
 
     // BoardDto를 받아 변환
     public static AdminPostDto fromBoard(BoardDto b) {

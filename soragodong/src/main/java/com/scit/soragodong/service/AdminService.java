@@ -2,6 +2,7 @@ package com.scit.soragodong.service;
 
 import com.scit.soragodong.domain.dto.AdminPostDto;
 import com.scit.soragodong.domain.dto.BoardDto;
+import com.scit.soragodong.domain.dto.BoardReplyDto;
 import com.scit.soragodong.domain.dto.UsedDto;
 import com.scit.soragodong.domain.entity.Admin;
 import com.scit.soragodong.domain.entity.Board;
@@ -27,6 +28,7 @@ public class AdminService {
     private final AdminRepository adminRepository;
     private final FileGrpRepository fileGrpRepository;
     private final FileRepository fileRepository;
+    private final BoardReplyRepository boardReplyRepository;
 
 
     @Transactional
@@ -154,6 +156,18 @@ public class AdminService {
     }
 
     @Transactional
+    public void toggleReplyStatus(Integer replyIdx) {
+        com.scit.soragodong.domain.entity.BoardReply reply = boardReplyRepository.findById(replyIdx)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
+        // 상태 토글
+        if (reply.getIsUse()) {
+            reply.delete();
+        } else {
+            reply.restore();
+        }
+    }
+
+    @Transactional
     public void updatePostStatus(Integer idx, String type) {
         if ("커뮤니티".equals(type)) {
             Board board = boardRepository.findById(idx)
@@ -189,7 +203,7 @@ public class AdminService {
                     board.getViewCount(),
                     board.getCreateDate(),
                     board.getUpdateDate(),
-                    board.getFileGrp().getFileGrpIdx(),
+                    board.getFileGrp() != null ? board.getFileGrp().getFileGrpIdx() : null,
                     board.getReplyCount()
             );
             AdminPostDto dto = AdminPostDto.fromBoard(boardDto);
@@ -200,6 +214,23 @@ public class AdminService {
                         .collect(java.util.stream.Collectors.toList());
                 dto.setImagePaths(paths);
             }
+
+            // 댓글 조회 추가 (작성자 null 체크 등 방어적 처리)
+            java.util.List<BoardReplyDto> replies = boardReplyRepository.findAllByBoard_BoardIdx(idx)
+                    .stream()
+                    .map(r -> BoardReplyDto.builder()
+                            .replyIdx(r.getReplyIdx())
+                            .boardIdx(idx)
+                            .userIdx(r.getUser() != null ? r.getUser().getUserIdx() : null)
+                            .userNickname(r.getUser() != null ? r.getUser().getUserNickname() : "알 수 없음")
+                            .replyContent(r.getReplyContent())
+                            .isUse(r.getIsUse())
+                            .createdAt(r.getCreatedAt())
+                            .updatedAt(r.getUpdatedAt())
+                            .build())
+                    .toList();
+            dto.setReplies(replies);
+
             return dto;
 
         } else if ("중고거래".equals(type)) {

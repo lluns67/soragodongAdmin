@@ -117,6 +117,7 @@
         </div>
     </div>
 </div>
+<!--상세보기 모달-->
 <div class="modal fade" id="postDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -131,6 +132,9 @@
                 </div>
                 <div class="form-group">
                     <label class="font-weight-bold">내용</label>
+                    <div id="image-container" class="text-center mb-3" style="display: none;">
+                        <!-- JS에서 <img> 태그들이 동적으로 추가됩니다 -->
+                    </div>
                     <div id="modal-content" class="p-3 border rounded" style="min-height: 200px; white-space: pre-wrap;"></div>
                 </div>
                 <div class="row">
@@ -183,11 +187,6 @@
 
 
     function viewPostDetail(postId, postType) {
-        // 유형에 따라 실제 서비스 상세 페이지로 이동하거나 모달을 띄웁니다.
-        const targetUrl = (postType === '커뮤니티') ? '/community/view/' : '/used/view/';
-        window.open(targetUrl + postId, '_blank'); // 새 탭에서 실제 게시물 확인
-    }
-    function viewPostDetail(postId, postType) {
     $.ajax({
         url: '/admin/api/post/detail',
         method: 'GET',
@@ -204,6 +203,19 @@
             $('#modal-content').text(data.content);
             $('#modal-writer').text(data.writer);
             $('#modal-views').text(data.views + "회");
+            
+            // 기존 이미지들 비우기
+            const $imgContainer = $('#image-container');
+            $imgContainer.empty().hide();
+
+            // 이미지 경로 리스트가 있고 데이터가 있는 경우 루프
+            if (data.imagePaths && data.imagePaths.length > 0) {
+                data.imagePaths.forEach(function(path) {
+                    const imgTag = `<img src="${path}" alt="이미지" class="img-thumbnail mb-2" style="max-height: 500px; display: block; margin: 0 auto;">`;
+                    $imgContainer.append(imgTag);
+                });
+                $imgContainer.show();
+            }
 
             // 모달 띄우기
             $('#postDetailModal').modal('show');

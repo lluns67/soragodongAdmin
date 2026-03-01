@@ -51,6 +51,10 @@ public class Board{
     @Column(name = "UPDATED_AT")
     private LocalDateTime updateDate;
 
+    @OneToOne(fetch = FetchType.LAZY) // 또는 @ManyToOne
+    @JoinColumn(name = "FILE_GRP_IDX")
+    private FileGrp fileGrp;
+
     @Formula("(SELECT count(1) FROM BOARD_REPLY r WHERE r.BOARD_IDX = BOARD_IDX and r.IS_USE = true)")
     private int replyCount;
 

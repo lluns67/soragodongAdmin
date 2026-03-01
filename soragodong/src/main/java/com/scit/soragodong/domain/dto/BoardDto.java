@@ -19,6 +19,6 @@ public record BoardDto(
         Integer viewCount,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-
+        Integer fileGrp,
         Integer replyCount) {
 }

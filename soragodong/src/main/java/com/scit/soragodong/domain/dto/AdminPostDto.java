@@ -18,6 +18,8 @@ public class AdminPostDto {
     private Integer views;
     private Boolean isUse;
     private Integer likeCount;
+    private Integer fileGrpIdx;
+    private java.util.List<String> imagePaths;
 
     // BoardDto를 받아 변환
     public static AdminPostDto fromBoard(BoardDto b) {
@@ -32,6 +34,7 @@ public class AdminPostDto {
         dto.setViews(b.viewCount());
         dto.setIsUse(b.isUse());
         dto.setLikeCount(b.likeCount());
+        dto.setFileGrpIdx(b.fileGrp());
         return dto;
     }
 

@@ -15,6 +15,6 @@ public record UsedDto(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         Boolean isUse,
-        Integer userIdx // Users 엔티티 전체 대신 PK만 담도록 설계
+        Integer userIdx// Users 엔티티 전체 대신 PK만 담도록 설계
 ) {}
 

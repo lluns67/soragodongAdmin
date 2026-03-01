@@ -7,10 +7,7 @@ import com.scit.soragodong.domain.entity.Admin;
 import com.scit.soragodong.domain.entity.Board;
 import com.scit.soragodong.domain.entity.Used;
 import com.scit.soragodong.domain.entity.Users;
-import com.scit.soragodong.repository.AdminRepository;
-import com.scit.soragodong.repository.BoardRepository;
-import com.scit.soragodong.repository.UsedRepository;
-import com.scit.soragodong.repository.UserRepository;
+import com.scit.soragodong.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +25,8 @@ public class AdminService {
     private final UsedRepository usedRepository;
     private final UserRepository userRepository;
     private final AdminRepository adminRepository;
+    private final FileGrpRepository fileGrpRepository;
+    private final FileRepository fileRepository;
 
 
     @Transactional
@@ -190,10 +189,18 @@ public class AdminService {
                     board.getViewCount(),
                     board.getCreateDate(),
                     board.getUpdateDate(),
-
+                    board.getFileGrp().getFileGrpIdx(),
                     board.getReplyCount()
             );
-            return AdminPostDto.fromBoard(boardDto);
+            AdminPostDto dto = AdminPostDto.fromBoard(boardDto);
+            if (board.getFileGrp() != null) {
+                java.util.List<String> paths = fileRepository.findByFileGroupAndIsUseTrueOrderByFileOrder(board.getFileGrp())
+                        .stream()
+                        .map(file -> "/img/" + file.getFileIdx())
+                        .collect(java.util.stream.Collectors.toList());
+                dto.setImagePaths(paths);
+            }
+            return dto;
 
         } else if ("중고거래".equals(type)) {
             Used used = usedRepository.findById(idx)
@@ -213,12 +220,16 @@ public class AdminService {
                     used.getIsUse(),
                     used.getUser().getUserIdx()
             );
-            return AdminPostDto.fromUsed(usedDto, nickname);
+            AdminPostDto dto = AdminPostDto.fromUsed(usedDto, nickname);
+            // USED 테이블에는 FILE_GRP_IDX가 없으므로 이미지 조회 생략
+            return dto;
 
         } else {
             throw new IllegalArgumentException("잘못된 게시글 유형입니다.");
         }
     }
+
+
 
 
 

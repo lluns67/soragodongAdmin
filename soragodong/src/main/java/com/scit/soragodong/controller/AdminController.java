@@ -247,14 +247,27 @@ public class AdminController {
 
 
     @GetMapping("deleted-post")
-    public String deletedPostPage(Model model) {
-        // AdminService에서 전체 게시글 중 삭제된 것만 필터링한 리스트를 가져옵니다.
-        List<AdminPostDto> deletedPosts = adminService.findAllPosts().stream()
-                .filter(post -> !post.getIsUse()) // isUse가 false인 것만 추출
+    public String deletedPostPage(
+            @RequestParam(value = "targetType", required = false) String targetType,
+            @RequestParam(value = "searchWord", required = false) String searchWord,
+            Model model) {
+        
+        List<AdminPostDto> posts;
+        
+        // 검색 조건이 있는 경우 searchPosts 결과를 가져옴
+        if (searchWord != null || targetType != null) {
+            posts = adminService.searchPosts(targetType, searchWord);
+        } else {
+            posts = adminService.findAllPosts();
+        }
+
+        // isUse가 false인 것(삭제된 게시물)만 필터링
+        List<AdminPostDto> deletedPosts = posts.stream()
+                .filter(post -> !post.getIsUse())
                 .collect(Collectors.toList());
 
         model.addAttribute("postList", deletedPosts);
-        return "admin/deleted-post"; // 삭제된 게시물 전용 뷰
+        return "admin/deleted-post";
     }
 	
 	// 공지 보내기

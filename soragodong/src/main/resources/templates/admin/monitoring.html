@@ -64,23 +64,23 @@
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-body">
-                    <h4 class="header-title">시스템 활동 로그</h4>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="bg-light">
-                            <tr>
-                                <th>시간</th>
-                                <th>구분</th>
-                                <th>메시지</th>
-                                <th>응답시간</th>
-                            </tr>
-                            </thead>
-                            <tbody id="monitoring-log">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<!--                <div class="card-body">-->
+<!--                    <h4 class="header-title">시스템 활동 로그</h4>-->
+<!--                    <div class="table-responsive">-->
+<!--                        <table class="table table-hover">-->
+<!--                            <thead class="bg-light">-->
+<!--                            <tr>-->
+<!--                                <th>시간</th>-->
+<!--                                <th>구분</th>-->
+<!--                                <th>메시지</th>-->
+<!--                                <th>응답시간</th>-->
+<!--                            </tr>-->
+<!--                            </thead>-->
+<!--                            <tbody id="monitoring-log">-->
+<!--                            </tbody>-->
+<!--                        </table>-->
+<!--                    </div>-->
+<!--                </div>-->
             </div>
         </div>
     </div>
@@ -135,15 +135,15 @@
             resourceChart.data.datasets[1].data.push(data.memoryUsage);
             resourceChart.update();
 
-            // 3. 로그 추가
-            const logHtml = `<tr>
-                <td>${now}</td>
-                <td><span class="badge badge-success">INFO</span></td>
-                <td>Main Server Heartbeat - OK</td>
-                <td>${data.responseTime}ms</td>
-            </tr>`;
-            $('#monitoring-log').prepend(logHtml);
-            if($('#monitoring-log tr').length > 10) $('#monitoring-log tr:last').remove();
+<!--            // 3. 로그 추가-->
+<!--            const logHtml = `<tr>-->
+<!--                <td>${now}</td>-->
+<!--                <td><span class="badge badge-success">INFO</span></td>-->
+<!--                <td>Main Server Heartbeat - OK</td>-->
+<!--                <td>${data.responseTime}ms</td>-->
+<!--            </tr>`;-->
+<!--            $('#monitoring-log').prepend(logHtml);-->
+<!--            if($('#monitoring-log tr').length > 10) $('#monitoring-log tr:last').remove();-->
         });
     }
 

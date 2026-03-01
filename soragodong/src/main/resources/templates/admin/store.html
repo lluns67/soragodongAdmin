@@ -2,7 +2,7 @@
 <html xmlns:th="thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>점포 생성</title>
     <style>
         :root {
     --xp-blue: #0058e3;
@@ -495,22 +495,8 @@ body {
             <label>주소:</label>
             <input type="text" id="reg-storeAddress" readonly>
         </div>
-        <div class="input-group inline">
-            <label>영업 시작:</label>
-            <input type="time" id="reg-storeOpenTime">
-            <label>영업 종료:</label>
-            <input type="time" id="reg-storeCloseTime">
-        </div>
-        <div class="input-group">
-            <label>이벤트 내용(E):</label>
-            <input type="text" id="reg-eventNote" placeholder="예: 아메리카노 1+1 행사 중!">
-        </div>
-        <div class="input-group inline">
-            <label>이벤트 시작:</label>
-            <input type="time" id="reg-eventStartTime">
-            <label>이벤트 종료:</label>
-            <input type="time" id="reg-eventEndTime">
-        </div>
+
+
         <div class="modal-footer">
             <button class="xp-button" onclick="registerStore()">확인</button>
             <button class="xp-button" onclick="closeModal()">취소</button>

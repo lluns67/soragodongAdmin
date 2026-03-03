@@ -32,6 +32,9 @@
             <span th:text="${#authentication.name}">Admin</span> <i class="fa fa-angle-down"></i>
         </h4>
         <div class="dropdown-menu">
+            <a class="dropdown-item text-secondary" href="javascript:void(0)" onclick="confirmAccountDelete()">
+                <i class="ti-close"></i> 회원 탈퇴
+            </a>
 
             <a class="dropdown-item text-danger" href="/logout"><i class="ti-power-off"></i>로그아웃</a>
         </div>
@@ -358,6 +361,9 @@
 <!--삭제용-->
 <form id="deleteForm" method="post" style="display:none;">
 </form>
+<!--계정 삭자용-->
+<form id="deleteAccountForm" th:action="@{/owner/account/delete}" method="post" style="display:none;">
+</form>
 <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
 <!-- bootstrap 4 js -->
 <script src="/assets/js/popper.min.js"></script>
@@ -556,6 +562,19 @@ function calculateEventState() {
 $('#editStoreModal').on('shown.bs.modal', function () {
     calculateEventState();
 });
+
+// 삭제
+function confirmAccountDelete() {
+    const msg = "정말로 탈퇴하시겠습니까?\n탈퇴 시 상점 정보와 등록된 모든 상품 데이터가 영구 삭제되며 복구할 수 없습니다.";
+
+    if (confirm(msg)) {
+        // 보안을 위해 한 번 더 의사를 묻거나, 비밀번호 입력 모달을 띄우는 것이 좋습니다.
+        if (confirm("최종 확인: 모든 데이터가 삭제되는 것에 동의하십니까?")) {
+            const form = document.getElementById('deleteAccountForm');
+            form.submit();
+        }
+    }
+}
 </script>
 
 <script src="/assets/js/owl.carousel.min.js"></script>

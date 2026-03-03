@@ -7,9 +7,12 @@ import com.scit.soragodong.domain.entity.Store;
 import com.scit.soragodong.repository.AdminRepository;
 import com.scit.soragodong.repository.StoreRepository;
 import com.scit.soragodong.service.TimesaleService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -117,4 +120,27 @@ public class OwnerController {
 		}
 		return "redirect:/owner/dashboard";
 	}
+
+    @PostMapping("/account/delete")
+    @Transactional // 삭제 작업은 반드시 트랜잭션 내에서 수행되어야 합니다.
+    public String deleteAccount(Authentication auth, HttpServletRequest request) {
+        String username = auth.getName();
+
+        adminRepository.findByAdminId(username).ifPresent(owner -> {
+            // [추가] 1. 점주가 소유한 상점을 먼저 찾아 삭제합니다.
+            // StoreRepository가 주입되어 있어야 합니다.
+            storeRepository.findByOwner(owner).ifPresent(store -> {
+                // 필요하다면 상점에 속한 상품(Product)들도 여기서 먼저 지워야 할 수 있습니다.
+                storeRepository.delete(store);
+            });
+
+            // 2. 이제 부모인 Admin을 삭제할 수 있습니다.
+            adminRepository.delete(owner);
+        });
+        // 3. 로그아웃 처리 및 세션 무효화
+        new SecurityContextLogoutHandler().logout(request, null, auth);
+
+        // 4. 탈퇴 결과 페이지나 메인으로 이동
+        return "redirect:/login?deleted=true";
+    }
 }

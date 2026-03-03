@@ -246,6 +246,7 @@ public class TimesaleService {
         store.setEventNote(dto.eventNote());
         store.setEventStartTime(dto.eventStartTime());
         store.setEventEndTime(dto.eventEndTime());
+		store.setEventState(dto.eventState());
 
         // 3. 사진 변경 시 파일 시스템 및 DB 연동
         if (files != null && !files.isEmpty() && !files.get(0).isEmpty()) {

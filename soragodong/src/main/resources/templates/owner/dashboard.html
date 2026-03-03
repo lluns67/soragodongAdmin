@@ -109,9 +109,10 @@
                                     <td th:text="${product.productNum}">1</td>
                                     <td th:text="${product.category}">음식</td>
                                     <td class="text-left" th:text="${product.productName}">상품명</td>
-                                    <td th:text="${#numbers.formatInteger(product.price, 0, 'COMMA')} + '원'">10,000</td>
+                                    <td th:text="${product.price != null ? #numbers.formatInteger(product.price, 0, 'COMMA') + '원' : '-'}">10,000</td>
                                     <td class="text-danger font-weight-bold"
-                                        th:text="${#numbers.formatInteger(product.eventPrice, 0, 'COMMA')} + '원'">8,000</td>
+                                        th:text="${product.eventPrice != null ? #numbers.formatInteger(product.eventPrice, 0, 'COMMA') + '원' : '-'}"></td>
+
                                     <td th:text="${product.productQuantity} + '개'">50</td>
                                     <td>
                                         <button class="btn btn-xs btn-outline-info"
@@ -271,7 +272,7 @@
                     <div class="form-row">
                         <div class="form-group col-md-6">
                             <label>상점명</label>
-                            <input type="text" name="storeName" class="form-control" th:value="${store.storeName}" readonly>
+                            <input type="text" name="storeName" class="form-control" th:value="${store.storeName}" >
                         </div>
                         <div class="form-group col-md-6">
                             <label>상점 주소</label>
@@ -309,27 +310,36 @@
                             <input type="time" name="storeCloseTime" class="form-control" th:value="${store.storeCloseTime}">
                         </div>
                     </div>
+
+                    <hr>
+                    <h6 class="mb-3 text-primary d-flex justify-content-between align-items-center">
+                        이벤트 설정
+                        <span id="previewEventState" class="badge badge-secondary">계산 중...</span>
+                    </h6>
+
                     <div class="form-row">
                         <div class="col-md-6 form-group">
                             <label>이벤트 시작 시간</label>
-                            <input type="time" name="eventStartTime" class="form-control"
+                            <input type="time" id="editEventStartTime" name="eventStartTime" class="form-control"
                                    th:value="${store.eventStartTime}">
                             <small class="text-muted">할인 혜택이 시작되는 시간입니다.</small>
                         </div>
                         <div class="col-md-6 form-group">
                             <label>이벤트 종료 시간</label>
-                            <input type="time" name="eventEndTime" class="form-control"
+                            <input type="time" id="editEventEndTime" name="eventEndTime" class="form-control"
                                    th:value="${store.eventEndTime}">
                             <small class="text-muted">할인 혜택이 종료되는 시간입니다.</small>
                         </div>
                     </div>
 
+                    <input type="hidden" id="editEventState" name="eventState" th:value="${store.eventState}">
+
                     <hr>
-                    <h6 class="mb-3 text-primary">SORA AI 이벤트 설정</h6>
+                    <h6 class="mb-3 text-primary">이벤트 설정</h6>
 
                     <div class="form-group">
-                        <label>SORA 브리핑 메시지 (eventNote)</label>
-                        <textarea name="eventNote" class="form-control" rows="3" th:text="${store.eventNote}" placeholder="AI가 사용자에게 읽어줄 공지 내용을 적어주세요."></textarea>
+                        <label>이벤트 노트</label>
+                        <textarea name="eventNote" class="form-control" rows="3" th:text="${store.eventNote}" placeholder="이벤트 공지 내용을 적어주세요."></textarea>
                     </div>
 
                     <div class="form-group">
@@ -381,8 +391,7 @@
     $('#editProductModal').modal('show');
 }
 
-/** * 커뮤니티 스타일의 파일 선택 및 미리보기 핸들러
- */
+
 function handleFileSelect(input) {
     const files = Array.from(input.files);
     const container = document.getElementById('imageRow'); // 미리보기가 들어갈 부모 요소
@@ -396,7 +405,7 @@ function handleFileSelect(input) {
             div.className = 'preview-box';
             div.style = "position: relative; width: 80px; height: 80px; margin-right: 10px;";
 
-            // 커뮤니티 스타일의 이미지 태그 및 삭제 버튼 구성
+
             div.innerHTML = `
                 <img src="${tempUrl}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 5px;">
                 <div class="btn-remove-img" onclick="this.parentElement.remove()"
@@ -505,6 +514,48 @@ function searchAddressToCoords() {
         });
 }
 
+
+    /**
+ * 시작/종료 시간을 비교하여 이벤트 상태를 계산합니다.
+ */
+function calculateEventState() {
+    const startTime = $('#editEventStartTime').val();
+    const endTime = $('#editEventEndTime').val();
+    const previewBadge = $('#previewEventState');
+    const hiddenInput = $('#editEventState');
+
+    if (!startTime || !endTime) return;
+
+    // 현재 시간 가져오기 (HH:mm 형식)
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ":" +
+                        now.getMinutes().toString().padStart(2, '0');
+
+    let state = "";
+    let badgeClass = "";
+
+    if (currentTime < startTime) {
+        state = "대기중";
+        badgeClass = "badge-warning"; // 노란색
+    } else if (currentTime >= startTime && currentTime <= endTime) {
+        state = "진행중";
+        badgeClass = "badge-success"; // 초록색
+    } else {
+        state = "종료";
+        badgeClass = "badge-danger";  // 빨간색
+    }
+
+    // UI 업데이트
+    previewBadge.text(state).removeClass('badge-secondary badge-warning badge-success badge-danger').addClass(badgeClass);
+
+    // 서버로 전송할 input 값 업데이트
+    hiddenInput.val(state);
+}
+
+// 모달이 열릴 때 초기 계산 실행
+$('#editStoreModal').on('shown.bs.modal', function () {
+    calculateEventState();
+});
 </script>
 
 <script src="/assets/js/owl.carousel.min.js"></script>

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -299,5 +300,36 @@ public class TimesaleService {
 		
 		// 3. 상품 데이터 삭제
 		storeProductRepository.delete(product);
+	}
+	
+	public void updateAllStoreEventStatus() {
+		// 1. 활성화된 모든 점포 리스트 조회
+		List<Store> stores = storeRepository.findAllByIsUse((byte) 1);
+		LocalTime now = LocalTime.now();
+		
+		for (Store store : stores) {
+			LocalTime start = store.getEventStartTime();
+			LocalTime end = store.getEventEndTime();
+			
+			// 시간 설정이 없는 점포는 건너뜁니다.
+			if (start == null || end == null) continue;
+			
+			String newState;
+			// 2. 시간 비교 로직
+			if (now.isBefore(start)) {
+				newState = "대기중";
+			} else if (now.isAfter(start) && now.isBefore(end)) {
+				newState = "진행중";
+			} else {
+				newState = "종료";
+			}
+			
+			// 3. 상태가 변경된 경우에만 업데이트
+			if (!newState.equals(store.getEventState())) {
+				store.setEventState(newState);
+				log.info("점포 [{}] 상태 변경: {} -> {}", store.getStoreName(), store.getEventState(), newState);
+			}
+		}
+		// @Transactional에 의해 메서드 종료 시 자동 DB 반영
 	}
 }

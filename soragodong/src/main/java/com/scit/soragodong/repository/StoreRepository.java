@@ -27,4 +27,6 @@ public interface  StoreRepository extends JpaRepository<Store, Integer>{
 
     @Query("SELECT s FROM Store s WHERE s.owner = :owner")
     Optional<Store> findByOwner(@Param("owner") Admin owner);
+	
+	List<Store> findAllByIsUse(byte b);
 }

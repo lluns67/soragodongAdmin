@@ -361,6 +361,9 @@
         </div>
     </div>
         </div>
+    <div id="hidden-admin-trigger"
+         style="position: fixed; right: 0; bottom: 0; width: 20px; height: 20px; z-index: 9999; cursor: default;">
+    </div>
     <!-- offset area end -->
     <!-- jquery latest version -->
     <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
@@ -418,7 +421,49 @@ function fetchDashboardStats() {
     });
 }
 
+$(document).ready(function() {
+    let clickCount = 0;
+    let clickTimer = null;
 
+    // 숨겨진 트리거 클릭 이벤트
+    $('#hidden-admin-trigger').on('click', function() {
+        clickCount++;
+
+        // 마지막 클릭 후 3초간 추가 클릭이 없으면 카운트 초기화 (보안 및 실수 방지)
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => {
+            clickCount = 0;
+        }, 3000);
+
+        // 10번 클릭 달성 시
+        if (clickCount === 10) {
+            clickCount = 0; // 카운트 초기화
+            if (confirm("모든 점포의 이벤트 상태를 현재 시간 기준으로 갱신하시겠습니까?")) {
+                updateAllStoreEventStatus();
+            }
+        }
+    });
+
+    // 서버에 상태 갱신 요청을 보내는 함수
+    function updateAllStoreEventStatus() {
+        $.ajax({
+            url: '/admin/api/store/update-all-status', // 관리자 서버에 만들 API 주소
+            method: 'POST',
+            success: function(res) {
+                alert("모든 점포의 상태가 현재 시간 기준으로 갱신되었습니다.");
+                // 대시보드 지표도 함께 갱신
+                fetchDashboardStats();
+            },
+            error: function(err) {
+                alert("상태 갱신 중 오류가 발생했습니다.");
+            }
+        });
+    }
+
+    // 기존 fetchDashboardStats 호출 로직 유지
+    fetchDashboardStats();
+    setInterval(fetchDashboardStats, 300000);
+});
     </script>
 </body>
 

@@ -9,6 +9,7 @@ import com.scit.soragodong.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -321,5 +322,15 @@ public class AdminController {
 		log.debug("신고 건 수 {}",unconfirmedReports);
 		
 		return ResponseEntity.ok(stats);
+	}
+	
+	@PostMapping("/api/store/update-all-status")
+	public ResponseEntity<?> updateAllStatus() {
+		try {
+			timeSaleService.updateAllStoreEventStatus();
+			return ResponseEntity.ok("전체 점포 상태 갱신 완료");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("갱신 실패: " + e.getMessage());
+		}
 	}
 }

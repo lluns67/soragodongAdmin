@@ -60,4 +60,8 @@ public class UserService {
 		user.setMannerScore(mannerScore);
 		userRepository.save(user);
 	}
+	
+	public long getTotalUserCount() {
+		return userRepository.count();
+	}
 }

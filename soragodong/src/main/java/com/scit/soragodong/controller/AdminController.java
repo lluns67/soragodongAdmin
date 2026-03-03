@@ -17,10 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -39,6 +36,7 @@ public class AdminController {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final AdminRepository adminRepository;
 	private final NoticeService noticeService;
+	private final ReportService reportService;
 
     @GetMapping("store")
     public String store(@RequestParam(value = "path", required = false, defaultValue = "전체지역") String path
@@ -308,4 +306,20 @@ public class AdminController {
             return "redirect:/admin/addAdmin";
         }
     }
+	
+	@GetMapping("/api/dashboard-stats")
+	public ResponseEntity<Map<String, Object>> getDashboardStats() {
+		Map<String, Object> stats = new HashMap<>();
+		
+		// 서비스에서 데이터 조회 (본 서버 호출 등)
+		long totalUsers = userService.getTotalUserCount();
+		long unconfirmedReports = reportService.countProcessingReports();
+		
+		stats.put("totalUsers", totalUsers);
+		stats.put("reportCount", unconfirmedReports);
+		
+		log.debug("신고 건 수 {}",unconfirmedReports);
+		
+		return ResponseEntity.ok(stats);
+	}
 }

@@ -124,4 +124,8 @@ public class ReportService {
             log.error("SSE 알림 전송 실패 (userIdx: {}): {}", userIdx, e.getMessage());
         }
     }
+	
+	public long countProcessingReports() {
+		return reportRepository.countByStatus("PROCESSING");
+	}
 }

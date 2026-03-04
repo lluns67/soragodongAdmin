@@ -4,10 +4,8 @@ import com.scit.soragodong.domain.dto.AdminPostDto;
 import com.scit.soragodong.domain.dto.BoardDto;
 import com.scit.soragodong.domain.dto.BoardReplyDto;
 import com.scit.soragodong.domain.dto.UsedDto;
-import com.scit.soragodong.domain.entity.Admin;
-import com.scit.soragodong.domain.entity.Board;
-import com.scit.soragodong.domain.entity.Used;
-import com.scit.soragodong.domain.entity.Users;
+import com.scit.soragodong.domain.entity.*;
+import com.scit.soragodong.domain.enums.FileRefType;
 import com.scit.soragodong.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -67,16 +65,15 @@ public class AdminService {
                         .likeCount(entity.getLikeCount())
                         .viewCount(entity.getViewCount())
                         .createdAt(entity.getCreateDate())
-
-
-
+                        .fileGrp(entity.getFileGrp() != null ? entity.getFileGrp().getFileGrpIdx() : null)
                         .build())
                 .map(AdminPostDto::fromBoard)
                 .toList();
 
         // 3. 중고거래 글 조회 -> UsedDto -> AdminPostDto
         List<AdminPostDto> usedList = usedRepository.findByUser_UserIdx(userIdx).stream()
-                .map(entity -> new UsedDto(
+                .map(entity -> {
+                    UsedDto u = new UsedDto(
                         entity.getUsedIdx(),
                         entity.getUsedTitle(),
                         entity.getUsedContent(),
@@ -88,7 +85,12 @@ public class AdminService {
                         entity.getUpdatedAt(),
                         entity.getIsUse(),
                         entity.getUser().getUserIdx()
-                ))
+                    );
+                    // FileGrpIdx 찾기
+                    fileGrpRepository.findByRefTypeAndRefId(FileRefType.USED, entity.getUsedIdx())
+                            .ifPresent(fg -> u.setFileGrp(fg.getFileGrpIdx()));
+                    return u;
+                })
                 .map(u -> AdminPostDto.fromUsed(u, nickname))
                 .toList();
 
@@ -124,7 +126,8 @@ public class AdminService {
 
         // 2. Used 전체 조회 -> UsedDto -> AdminPostDto
         List<AdminPostDto> usedList = usedRepository.findAll().stream()
-                .map(entity -> new UsedDto(
+                .map(entity -> {
+                    UsedDto u = new UsedDto(
                         entity.getUsedIdx(),
                         entity.getUsedTitle(),
                         entity.getUsedContent(),
@@ -136,9 +139,14 @@ public class AdminService {
                         entity.getUpdatedAt(),
                         entity.getIsUse(),
                         entity.getUser().getUserIdx()
-                ))
-                .map(u -> AdminPostDto.fromUsed(u, u.userIdx() != null
-                        ? userRepository.findById(u.userIdx())
+                    );
+                    // FileGrpIdx 찾기
+                    fileGrpRepository.findByRefTypeAndRefId(FileRefType.USED, entity.getUsedIdx())
+                            .ifPresent(fg -> u.setFileGrp(fg.getFileGrpIdx()));
+                    return u;
+                })
+                .map(u -> AdminPostDto.fromUsed(u, u.getUserIdx() != null
+                        ? userRepository.findById(u.getUserIdx())
                         .map(Users::getUserNickname)
                         .orElse("알 수 없음")
                         : "알 수 없음"))
@@ -234,6 +242,10 @@ public class AdminService {
             return dto;
 
         } else if ("중고거래".equals(type) || "USED_ITEM".equalsIgnoreCase(type) || "market".equals(type)) {
+
+            // 중고거래는 file_grp_idx 없기때문에 별도로 찾기
+            FileGrp fileGrp = fileGrpRepository.findByRefTypeAndRefId(FileRefType.USED, idx).orElse(null);
+
             Used used = usedRepository.findById(idx)
                     .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
             // 닉네임은 엔티티에서 바로 가져오기
@@ -250,9 +262,21 @@ public class AdminService {
                     used.getUpdatedAt(),
                     used.getIsUse(),
                     used.getUser().getUserIdx()
+
             );
             AdminPostDto dto = AdminPostDto.fromUsed(usedDto, nickname);
-            // USED 테이블에는 FILE_GRP_IDX가 없으므로 이미지 조회 생략
+
+
+            //이미지 추가
+            if (fileGrp != null) {
+                java.util.List<String> paths = fileRepository.findByFileGroupAndIsUseTrueOrderByFileOrder(fileGrp)
+                        .stream()
+                        .map(file -> "/img/" + file.getFileIdx())
+                        .collect(java.util.stream.Collectors.toList());
+                dto.setImagePaths(paths);
+            }
+
+
             return dto;
 
         } else {
@@ -339,6 +363,7 @@ public class AdminService {
 							.likeCount(entity.getLikeCount())
 							.viewCount(entity.getViewCount())
 							.createdAt(entity.getCreateDate())
+							.fileGrp(entity.getFileGrp() != null ? entity.getFileGrp().getFileGrpIdx() : null)
 							.build())
 					.map(AdminPostDto::fromBoard)
 					.toList());
@@ -370,7 +395,11 @@ public class AdminService {
 								entity.getIsUse(),
 								entity.getUser().getUserIdx()
 						);
-						return AdminPostDto.fromUsed(u, entity.getUser().getUserNickname());
+						// FileGrpIdx 찾기
+						fileGrpRepository.findByRefTypeAndRefId(FileRefType.USED, entity.getUsedIdx())
+								.ifPresent(fg -> u.setFileGrp(fg.getFileGrpIdx()));
+						
+						return AdminPostDto.fromUsed(u, entity.getUser() != null ? entity.getUser().getUserNickname() : "알 수 없음");
 					})
 					.toList());
 		}

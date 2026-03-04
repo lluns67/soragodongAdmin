@@ -42,15 +42,16 @@ public class AdminPostDto {
     // UsedDto를 받아 변환
     public static AdminPostDto fromUsed(UsedDto u, String nickname) {
         AdminPostDto dto = new AdminPostDto();
-        dto.setIdx(u.usedIdx());
+        dto.setIdx(u.getUsedIdx());
         dto.setType("중고거래");
-        dto.setCategory(u.usedState());
-        dto.setTitle(u.usedTitle());
-        dto.setContent(u.usedContent());
+        dto.setCategory(u.getUsedState());
+        dto.setTitle(u.getUsedTitle());
+        dto.setContent(u.getUsedContent());
         dto.setWriter(nickname);
-        dto.setDate(u.createdAt());
-        dto.setViews(u.viewCount());
-        dto.setIsUse(u.isUse());
+        dto.setDate(u.getCreatedAt());
+        dto.setViews(u.getViewCount());
+        dto.setIsUse(u.getIsUse());
+        dto.setFileGrpIdx(u.getFileGrp());
         return dto;
     }
 }

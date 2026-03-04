@@ -46,11 +46,11 @@
                                 <td>
                                     <span class="badge badge-secondary" th:text="${report.targetType}">BOARD</span>
                                     <small th:text="'(ID: ' + ${report.targetId} + ')'"></small>
-                                    <a th:href="@{/admin/total-post(postIdx=${report.targetId}, targetType=${report.targetType})}"
-                                       target="_blank"
-                                       class="btn btn-xs btn-outline-primary ml-2">
+                                    <button type="button"
+                                            class="btn btn-xs btn-outline-primary ml-2"
+                                            th:onclick="viewPostDetail([[${report.targetId}]], [[${report.targetType}]])">
                                         <i class="ti-search"></i> 게시물 확인
-                                    </a>
+                                    </button>
                                 </td>
                                 <td th:text="${report.reporterIdx}">User9</td>
                                 <td th:text="${report.reason}">부적절한 내용</td>
@@ -101,7 +101,40 @@
         </div>
     </div>
 </div>
-
+<div class="modal fade" id="postDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-type-badge">게시물 상세 내용</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="font-weight-bold">제목</label>
+                    <p id="modal-title" class="p-2 bg-light rounded"></p>
+                </div>
+                <div class="form-group">
+                    <label class="font-weight-bold">내용</label>
+                    <div id="image-container" class="text-center mb-3" style="display: none;"></div>
+                    <div id="modal-content" class="p-3 border rounded" style="min-height: 200px; white-space: pre-wrap;"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="font-weight-bold">작성자</label>
+                        <p id="modal-writer"></p>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <label class="font-weight-bold">조회수</label>
+                        <p id="modal-views"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="/assets/js/vendor/jquery-2.2.4.min.js"></script>
 <script src="/assets/js/bootstrap.min.js"></script>
 <script>
@@ -142,6 +175,46 @@
             }
         });
     }
+
+    // total-report.html 스크립트 영역에 추가
+function viewPostDetail(postId, postType) {
+    $.ajax({
+        url: '/admin/api/post/detail',
+        method: 'GET',
+        data: {
+            idx: postId,
+            type: postType
+        },
+        success: function(data) {
+            // 모달 데이터 세팅
+            const badgeClass = (postType === '커뮤니티' || postType === 'BOARD') ? 'badge-info' : 'badge-success';
+            $('#modal-type-badge').html(`<span class="badge ${badgeClass}">${postType}</span> ${postId}번 상세 정보`);
+
+            $('#modal-title').text(data.title);
+            $('#modal-content').text(data.content);
+            $('#modal-writer').text(data.writer);
+            $('#modal-views').text((data.views || 0) + "회");
+
+            // 이미지 처리
+            const $imgContainer = $('#image-container');
+            $imgContainer.empty().hide();
+
+            if (data.imagePaths && Array.isArray(data.imagePaths) && data.imagePaths.length > 0) {
+                data.imagePaths.forEach(function(path) {
+                    const imgTag = `<img src="${path}" alt="이미지" class="img-thumbnail mb-2" style="max-height: 400px; display: block; margin: 0 auto;">`;
+                    $imgContainer.append(imgTag);
+                });
+                $imgContainer.show();
+            }
+
+            // 모달 띄우기
+            $('#postDetailModal').modal('show');
+        },
+        error: function(xhr) {
+            alert("게시물 내용을 불러오는 데 실패했습니다. 삭제된 게시물일 수 있습니다.");
+        }
+    });
+}
 </script>
 </body>
 </html>

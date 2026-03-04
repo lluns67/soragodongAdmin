@@ -185,7 +185,7 @@ public class AdminService {
 
     @Transactional
     public AdminPostDto getPostDetail(Integer idx, String type) {
-        if ("커뮤니티".equals(type)) {
+        if ("커뮤니티".equals(type) || "BOARD".equalsIgnoreCase(type)) {
             Board board = boardRepository.findById(idx)
                     .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
             // BoardDto record 생성자에 모든 필드 맞춰서 전달
@@ -233,7 +233,7 @@ public class AdminService {
 
             return dto;
 
-        } else if ("중고거래".equals(type)) {
+        } else if ("중고거래".equals(type) || "USED_ITEM".equalsIgnoreCase(type) || "market".equals(type)) {
             Used used = usedRepository.findById(idx)
                     .orElseThrow(() -> new IllegalArgumentException("게시글이 없습니다."));
             // 닉네임은 엔티티에서 바로 가져오기

@@ -1,5 +1,6 @@
 package com.scit.soragodong.domain.entity;
 
+import com.scit.soragodong.domain.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,13 +22,14 @@ public class Notification {
     private Integer notiIdx;
 
     @Column(name = "USER_IDX", nullable = false)
-    private Long userIdx;
-
-    @Column(name = "NOTI_TYPE", length = 30, nullable = false)
-    private String notiType;
+    private Integer userIdx;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name = "NOTI_TYPE",  nullable = false)
+	private NotificationType notiType;
 
     @Column(name = "REF_ID")
-    private Long refId;
+    private Integer refId;
 
     @Column(name = "MESSAGE", length = 500)
     private String message;

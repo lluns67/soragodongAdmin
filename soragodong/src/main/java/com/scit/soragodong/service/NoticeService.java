@@ -5,6 +5,7 @@ import com.scit.soragodong.domain.entity.FileGrp;
 import com.scit.soragodong.domain.entity.Notice;
 import com.scit.soragodong.domain.entity.Notification;
 import com.scit.soragodong.domain.enums.FileRefType;
+import com.scit.soragodong.domain.enums.NotificationType;
 import com.scit.soragodong.repository.FileGrpRepository;
 import com.scit.soragodong.repository.NoticeRepository;
 import com.scit.soragodong.repository.NotificationRepository;
@@ -46,9 +47,9 @@ public class NoticeService {
 
         //Notification DB에 저장용 USER_IDX 는 0으로 설정함
         Notification notification = Notification.builder()
-                .userIdx(0L)
-                .notiType("ADMIN_NOTICE")
-                .refId(Long.valueOf(savedNotice.getNoticeIdx()))
+                .userIdx(0)
+                .notiType(NotificationType.ADMIN_NOTICE)
+                .refId(savedNotice.getNoticeIdx())
                 .message(dto.getTitle())
 				.isRead(false)
 				.createdAt(LocalDateTime.now())
@@ -124,7 +125,7 @@ public class NoticeService {
 		// 2. 연결된 알림들 찾기 (NOTICE 타입으로 검색)
 		// 팁: ADMIN_NOTICE 대신 실제 DB에 저장된 타입(NOTICE 등)을 사용하세요.
 		List<Notification> notifications = notificationRepository.findByNotiTypeAndRefId(
-				"ADMIN_NOTICE", Long.valueOf(noticeIdx));
+				NotificationType.ADMIN_NOTICE, noticeIdx);
 		
 		log.info("[조회 결과] 찾은 알림 개수: {}", notifications.size());
 		
